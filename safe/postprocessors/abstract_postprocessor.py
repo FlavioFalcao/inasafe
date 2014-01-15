@@ -12,11 +12,11 @@ __copyright__ += 'Disaster Reduction'
 
 import logging
 
-from safe.common.exceptions import PostProcessorError
-from safe.common.utilities import (get_defaults,
-                                   format_int)
+from safe.common.utilities import OrderedDict
 
-from third_party.odict import OrderedDict
+from safe.defaults import get_defaults
+from safe.common.exceptions import PostProcessorError
+from safe.common.utilities import (format_int)
 
 LOGGER = logging.getLogger('InaSAFE')
 
@@ -169,7 +169,7 @@ class AbstractPostprocessor():
 
         if metadata is None:
             metadata = dict()
-        LOGGER.debug('name : ' + str(name) + '\nresult : ' + str(result))
+        # LOGGER.debug('name : ' + str(name) + '\nresult : ' + str(result))
         if result is not None and result != self.NO_DATA_TEXT:
             try:
                 result = format_int(result)

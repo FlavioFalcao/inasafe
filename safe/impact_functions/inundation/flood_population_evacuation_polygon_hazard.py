@@ -12,13 +12,15 @@ Contact : ole.moller.nielsen@gmail.com
 .. todo:: Check raster is single band
 
 """
+
 __author__ = 'Ole Nielson'
 __revision__ = '$Format:%H$'
 __date__ = '10/01/2011'
 __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
                  'Disaster Reduction')
 import numpy
-from third_party.odict import OrderedDict
+from safe.common.utilities import OrderedDict
+from safe.defaults import get_defaults
 from safe.impact_functions.core import (
     FunctionProvider,
     get_hazard_layer,
@@ -29,7 +31,6 @@ from safe.storage.vector import Vector
 from safe.common.utilities import (
     ugettext as tr,
     round_thousand,
-    get_defaults,
     humanize_class,
     create_classes,
     create_label)

@@ -11,7 +11,6 @@ Contact : ole.moller.nielsen@gmail.com
      (at your option) any later version.
 
 """
-
 __author__ = 'Marco Bernasocchi'
 __date__ = '10/01/2011'
 __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
@@ -29,31 +28,28 @@ from os.path import join
 pardir = os.path.abspath(join(os.path.dirname(__file__), '..'))
 sys.path.append(pardir)
 
-# this import required to enable PyQt API v2
-#noinspection PyUnresolvedReferences
-import qgis  # pylint: disable=W0611
+from qgis.core import QgsVectorLayer, QgsCoordinateReferenceSystem
 
-from qgis.core import QgsVectorLayer
-
+from safe.common.testing import get_qgis_app
+from safe_qgis import breakdown_defaults
 from safe_qgis.safe_interface import (
+    UNITDATA,
     TESTDATA,
     BOUNDDATA,
     Raster,
-    Vector,
-    safe_read_layer)
+    Vector)
 
 from safe_qgis.utilities.utilities_for_testing import (
-    get_qgis_app,
     set_canvas_crs,
     set_jakarta_extent,
     GEOCRS)
 
 from safe_qgis.widgets.dock import Dock
 from safe_qgis.impact_statistics.aggregator import Aggregator
-from safe_qgis.utilities.clipper import clip_layer
+#from safe_qgis.utilities.clipper import clip_layer
 from safe_qgis.utilities.keyword_io import KeywordIO
 from safe_qgis.utilities.utilities import (
-    breakdown_defaults, extent_to_geo_array)
+    extent_to_geo_array)
 
 from safe_qgis.utilities.utilities_for_testing import (
     load_standard_layers,
@@ -90,8 +86,13 @@ class AggregatorTest(unittest.TestCase):
         DOCK.show_intermediate_layers = False
         set_jakarta_extent()
 
-        self.keywordIO = KeywordIO()
-        self.defaults = breakdown_defaults()
+        self._keywordIO = KeywordIO()
+        self._defaults = breakdown_defaults()
+
+        # Set extent as Jakarta extent
+        geo_crs = QgsCoordinateReferenceSystem()
+        geo_crs.createFromSrid(4326)
+        self.extent = extent_to_geo_array(CANVAS.extent(), geo_crs)
 
     def test_combo_aggregation_loaded_project(self):
         """Aggregation combo changes properly according loaded layers"""
@@ -209,6 +210,22 @@ class AggregatorTest(unittest.TestCase):
         message = ('The aggregation should be None. Found: %s' % attribute)
         assert attribute is None, message
 
+    def test_setup_target_field(self):
+        """Test setup up target field is correct
+        """
+        layer = QgsVectorLayer(
+            os.path.join(BOUNDDATA, 'kabupaten_jakarta.shp'),
+            'test aggregation',
+            'ogr')
+        aggregator = Aggregator(self.extent, None)
+        self.assertFalse(aggregator._setup_target_field(layer))
+
+        impact_layer_name = os.path.join(TESTDATA,
+                                         'aggregation_test_impact_vector.shp')
+        impact_layer = QgsVectorLayer(impact_layer_name,
+                                      'test', 'ogr')
+        self.assertTrue(aggregator._setup_target_field(impact_layer))
+
     def test_preprocessing(self):
         """Preprocessing results are correct.
 
@@ -251,10 +268,12 @@ class AggregatorTest(unittest.TestCase):
             DOCK.aggregator.preprocessed_feature_count,
             message)
 
-    def _aggregate(self,
-                   impact_layer,
-                   expected_results,
-                   use_native_zonal_stats=False):
+    def _aggregate(
+            self,
+            impact_layer,
+            expected_results,
+            use_native_zonal_stats=False,
+            use_aoi_mode=False):
         """Helper to calculate aggregation.
 
         Expected results is split into two lists - one list contains numeric
@@ -282,28 +301,20 @@ class AggregatorTest(unittest.TestCase):
             os.path.join(BOUNDDATA, 'kabupaten_jakarta.shp'),
             'test aggregation',
             'ogr')
-        # create a copy of aggregation layer
-        geo_extent = extent_to_geo_array(
-            aggregation_layer.extent(),
-            aggregation_layer.crs())
 
-        aggregation_attribute = self.keywordIO.read_keywords(
-            aggregation_layer, self.defaults['AGGR_ATTR_KEY'])
-        # noinspection PyArgumentEqualDefault
-        aggregation_layer = clip_layer(
-            layer=aggregation_layer,
-            extent=geo_extent,
-            explode_flag=True,
-            explode_attribute=aggregation_attribute)
+        # Dummy layers. Them are used in aggregator._prepare_layer
+        # The extent of the layers must be equal to aggregator.extent
+        hazard_layer = exposure_layer = aggregation_layer
 
-        aggregator = Aggregator(None, aggregation_layer)
         # setting up
-        aggregator.is_valid = True
-        aggregator.layer = aggregation_layer
-        aggregator.safe_layer = safe_read_layer(
-            str(aggregator.layer.source()))
-        aggregator.aoi_mode = False
+        if not use_aoi_mode:
+            aggregator = Aggregator(self.extent, aggregation_layer)
+        else:
+            aggregator = Aggregator(self.extent, None)
+        aggregator.set_layers(hazard_layer, exposure_layer)
+        aggregator.validate_keywords()
         aggregator.use_native_zonal_stats = use_native_zonal_stats
+
         aggregator.aggregate(impact_layer)
 
         provider = aggregator.layer.dataProvider()
@@ -315,10 +326,11 @@ class AggregatorTest(unittest.TestCase):
             feature_numeric_results = []
             attributes = feature.attributes()
             for attr in attributes:
-                if isinstance(attr, (int, float)):
-                    feature_numeric_results.append(attr)
-                else:
-                    feature_string_results.append(attr)
+                try:
+                    value = float(attr)
+                    feature_numeric_results.append(value)
+                except ValueError:
+                    feature_string_results.append(str(attr))
 
             numeric_results.append(feature_numeric_results)
             string_results.append(feature_string_results)
@@ -391,10 +403,11 @@ class AggregatorTest(unittest.TestCase):
         - be flooded
         - kabupaten_jakarta_singlepart.shp
         """
+
+        # Aggregation in sum mode
         impact_layer = Vector(
             data=os.path.join(TESTDATA, 'aggregation_test_impact_vector.shp'),
             name='test vector impact')
-
         expected_results = [
             ['JAKARTA BARAT', '87'],
             ['JAKARTA PUSAT', '117'],
@@ -403,11 +416,9 @@ class AggregatorTest(unittest.TestCase):
             ['JAKARTA TIMUR', '198']
         ]
         self._aggregate(impact_layer, expected_results)
-
         impact_layer = Vector(
             data=TESTDATA + '/aggregation_test_impact_vector_small.shp',
             name='test vector impact')
-
         expected_results = [
             ['JAKARTA BARAT', '2'],
             ['JAKARTA PUSAT', '0'],
@@ -415,8 +426,33 @@ class AggregatorTest(unittest.TestCase):
             ['JAKARTA UTARA', '1'],
             ['JAKARTA TIMUR', '0']
         ]
-
         self._aggregate(impact_layer, expected_results)
+        expected_results = [
+            ['Entire area', '3']
+        ]
+        self._aggregate(impact_layer, expected_results, use_aoi_mode=True)
+
+        # Aggregation in class_count mode
+        data_path = os.path.join(
+            UNITDATA,
+            'impact',
+            'aggregation_test_impact_vector_class_count.shp')
+        impact_layer = Vector(
+            data=data_path,
+            name='test vector impact')
+        expected_results = [
+            ['Entire area', '2', '3', '0']
+        ]
+        self._aggregate(impact_layer, expected_results, use_aoi_mode=True)
+        expected_results = [
+            ['JAKARTA BARAT', '1', '2', '0'],
+            ['JAKARTA PUSAT', '1', '0', '0'],
+            ['JAKARTA SELATAN', '0', '0', '0'],
+            ['JAKARTA UTARA', '0', '1', '0'],
+            ['JAKARTA TIMUR', '0', '0', '0']
+        ]
+        self._aggregate(impact_layer, expected_results)
+
 
 if __name__ == '__main__':
     suite = unittest.makeSuite(AggregatorTest)

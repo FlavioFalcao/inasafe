@@ -10,7 +10,6 @@ Contact : ole.moller.nielsen@gmail.com
      (at your option) any later version.
 
 """
-__author__ = 'bungcip@gmail.com'
 __date__ = '05/02/2013'
 __copyright__ = ('Copyright 2013, Australia Indonesia Facility for '
                  'Disaster Reduction')
@@ -19,7 +18,7 @@ __author__ = 'timlinux'
 import os
 import sys
 import unittest
-from PyQt4 import Qt
+from PyQt4.QtGui import QApplication
 from third_party.pydispatch import dispatcher
 from safe_qgis.widgets.message_viewer import MessageViewer
 from safe_qgis.safe_interface import messaging as m
@@ -36,11 +35,13 @@ TEST_FILES_DIR = os.path.join(
 class MessageViewerTest(unittest.TestCase):
     """Test cases for message viewer module."""
 
+    APPLICATION = QApplication(sys.argv)
+
     def setUp(self):
         """Fixture run before all tests"""
         os.environ['LANG'] = 'en'
-        self.app = Qt.QApplication(sys.argv)
         self.message_viewer = MessageViewer(None)
+        self.message_viewer.show()
         # Set up dispatcher for dynamic messages
         # Dynamic messages will not clear the message queue so will be appended
         # to existing user messages
@@ -61,7 +62,6 @@ class MessageViewerTest(unittest.TestCase):
     def tearDown(self):
         """Fixture run after each test"""
         self.message_viewer = None
-        self.app = None
 
     def test_dynamic_message(self):
         """Test we can send dynamic messages to the message viewer."""
@@ -93,22 +93,22 @@ class MessageViewerTest(unittest.TestCase):
     def Xtest_error_message(self):
         """Test we can send error messages to the message viewer."""
         text = self.fake_error()
-        myExpectedResult = open(
+        my_expected_result = open(
             TEST_FILES_DIR +
             '/test-error-message.txt',
             'r').read().replace('\n', '')
-        self.assertEqual(text, myExpectedResult)
+        self.assertEqual(text, my_expected_result)
 
     #Enabling this test causes a segfault for me TS
     def Xtest_static_and_error(self):
         """Test error message works when there is a static message in place."""
         self.message_viewer.static_message_event(None, m.Message('Hi'))
         text = self.fake_error()
-        myExpectedResult = open(
+        my_expected_result = open(
             TEST_FILES_DIR +
             '/test-static-error-message.txt',
             'r').read().replace('\n', '')
-        self.assertEqual(text, myExpectedResult)
+        self.assertEqual(text, my_expected_result)
 
 if __name__ == '__main__':
     unittest.main()

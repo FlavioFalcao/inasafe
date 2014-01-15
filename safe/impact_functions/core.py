@@ -11,7 +11,7 @@ import logging
 from math import ceil
 
 import numpy
-from third_party.odict import OrderedDict
+from safe.common.utilities import OrderedDict
 
 import keyword as python_keywords
 from safe.common.polygon import inside_polygon
@@ -48,12 +48,11 @@ class FunctionProvider:
 
     Plugins implementing this reference should provide the following method:
 
-    run(layers)
+    run(layers)::
 
-    ===============  =========================
-    layers           A list of layers
-    result           A list of layers
-    ===============  =========================
+      layers           A list of layers
+      result           A list of layers
+
     """
     __metaclass__ = PluginMount
 
@@ -66,7 +65,8 @@ def default_minimum_needs():
 
     .. note:: Key names will be translated.
     """
-    rice = tr('Rice')
+    rice = tr(
+        'Rice')
     drinking_water = tr('Drinking Water')
     water = tr('Water')
     family_kits = tr('Family Kits')

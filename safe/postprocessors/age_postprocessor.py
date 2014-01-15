@@ -11,10 +11,9 @@ __copyright__ = 'Copyright 2012, Australia Indonesia Facility for '
 __copyright__ += 'Disaster Reduction'
 
 
+from safe.defaults import get_defaults
 from safe.postprocessors.abstract_postprocessor import AbstractPostprocessor
-
-from safe.common.utilities import (get_defaults,
-                                   ugettext as tr)
+from safe.common.utilities import (ugettext as tr)
 
 
 class AgePostprocessor(AbstractPostprocessor):
@@ -127,11 +126,6 @@ class AgePostprocessor(AbstractPostprocessor):
         """
         myName = tr('Total')
 
-        #FIXME (MB) Shameless hack to deal with issue #368
-        if self.impact_total > 8000000000 or self.impact_total < 0:
-            self._append_result(myName, self.NO_DATA_TEXT)
-            return
-
         myResult = self.impact_total
         try:
             myResult = int(round(myResult))
@@ -153,12 +147,6 @@ class AgePostprocessor(AbstractPostprocessor):
             None
         """
         myName = tr('Youth count (affected)')
-
-        #FIXME (MB) Shameless hack to deal with issue #368
-        if self.impact_total > 8000000000 or self.impact_total < 0:
-            self._append_result(myName, self.NO_DATA_TEXT)
-            return
-
         myResult = self.impact_total * self.youth_ratio
         try:
             myResult = int(round(myResult))
@@ -180,12 +168,6 @@ class AgePostprocessor(AbstractPostprocessor):
             None
         """
         myName = tr('Adult count (affected)')
-
-        #FIXME (MB) Shameless hack to deal with issue #368
-        if self.impact_total > 8000000000 or self.impact_total < 0:
-            self._append_result(myName, self.NO_DATA_TEXT)
-            return
-
         myResult = self.impact_total * self.adult_ratio
         try:
             myResult = int(round(myResult))
@@ -207,12 +189,6 @@ class AgePostprocessor(AbstractPostprocessor):
             None
         """
         myName = tr('Elderly count (affected)')
-
-        #FIXME (MB) Shameless hack to deal with issue #368
-        if self.impact_total > 8000000000 or self.impact_total < 0:
-            self._append_result(myName, self.NO_DATA_TEXT)
-            return
-
         myResult = self.impact_total * self.elder_ratio
         try:
             myResult = int(round(myResult))

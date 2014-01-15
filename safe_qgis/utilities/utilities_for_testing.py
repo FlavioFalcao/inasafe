@@ -12,18 +12,16 @@ import glob
 from os.path import join
 from itertools import izip
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from qgis.core import (
-    QgsApplication,
     QgsVectorLayer,
     QgsRasterLayer,
     QgsRectangle,
     QgsCoordinateReferenceSystem,
     QgsMapLayerRegistry)
-from qgis.gui import QgsMapCanvas
-from safe_qgis.test.qgis_interface import QgisInterface
 
 # For testing and demoing
+from safe.common.testing import get_qgis_app
 from safe_qgis.safe_interface import (
     read_file_keywords,
     unique_filename,
@@ -32,7 +30,7 @@ from safe_qgis.safe_interface import (
     UNITDATA)
 
 from safe_qgis.safe_interface import HAZDATA, EXPDATA
-
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 
 YOGYA2006_title = 'An earthquake in Yogyakarta like in 2006'
 PADANG2009_title = 'An earthquake in Padang like in 2009'
@@ -46,13 +44,8 @@ SCENARIO_DIR = os.path.abspath(os.path.join(
 
 LOGGER = logging.getLogger('InaSAFE')
 
-QGIS_APP = None  # Static variable used to hold hand to running QGis
-# app
-CANVAS = None
-PARENT = None
-IFACE = None
 GEOCRS = 4326  # constant for EPSG:GEOCRS Geographic CRS id
-GOOGLECRS = 900913  # constant for EPSG:GOOGLECRS Google Mercator id
+GOOGLECRS = 3857  # constant for EPSG:GOOGLECRS Google Mercator id
 DEVNULL = open(os.devnull, 'w')
 CONTROL_IMAGE_DIR = os.path.join(
     os.path.dirname(__file__),
@@ -64,19 +57,19 @@ def assert_hashes_for_file(hashes, filename):
     :param filename: the filename
     :param hashes: the hash of the file
     """
-    hash = hash_for_file(filename)
+    file_hash = hash_for_file(filename)
     message = (
         'Unexpected hash'
         '\nGot: %s'
         '\nExpected: %s'
         '\nPlease check graphics %s visually '
         'and add to list of expected hashes '
-        'if it is OK on this platform.' % (hash, hashes, filename))
-    assert hash in hashes, message
+        'if it is OK on this platform.' % (file_hash, hashes, filename))
+    assert file_hash in hashes, message
 
 
 def assert_hash_for_file(hash_string, filename):
-    """Assert that a files has matches its expected hash
+    """Assert that a files hash matches its expected hash.
     :param filename:
     :param hash_string:
     """
@@ -98,58 +91,6 @@ def hash_for_file(filename):
     data_hash.update(data)
     data_hash = data_hash.hexdigest()
     return data_hash
-
-
-def get_qgis_app():
-    """ Start one QGis application to test against
-
-    Input
-        NIL
-
-    Output
-        handle to qgis app
-
-
-    If QGis is already running the handle to that app will be returned
-    """
-
-    global QGIS_APP  # pylint: disable=W0603
-
-    if QGIS_APP is None:
-        gui_flag = True  # All test will run qgis in safe_qgis mode
-        #noinspection PyPep8Naming
-        QGIS_APP = QgsApplication(sys.argv, gui_flag)
-
-        # Note: This block is not needed for  QGIS > 1.8 which will
-        # automatically check the QGIS_PREFIX_PATH var so it is here
-        # for backwards compatibility only
-        if 'QGIS_PREFIX_PATH' in os.environ:
-            path = os.environ['QGIS_PREFIX_PATH']
-            use_default_path_flag = True
-            QGIS_APP.setPrefixPath(path, use_default_path_flag)
-
-        QGIS_APP.initQgis()
-        s = QGIS_APP.showSettings()
-        LOGGER.debug(s)
-
-    global PARENT  # pylint: disable=W0603
-    if PARENT is None:
-        #noinspection PyPep8Naming
-        PARENT = QtGui.QWidget()
-
-    global CANVAS  # pylint: disable=W0603
-    if CANVAS is None:
-        #noinspection PyPep8Naming
-        CANVAS = QgsMapCanvas(PARENT)
-        CANVAS.resize(QtCore.QSize(400, 400))
-
-    global IFACE  # pylint: disable=W0603
-    if IFACE is None:
-        # QgisInterface is a stub implementation of the QGIS plugin interface
-        #noinspection PyPep8Naming
-        IFACE = QgisInterface(CANVAS)
-
-    return QGIS_APP, CANVAS, IFACE, PARENT
 
 
 def test_data_path(subdirectory=None):
@@ -212,6 +153,8 @@ def load_layer(layer_file, directory=TESTDATA):
         raise Exception(message)
 
     message = 'Layer "%s" is not valid' % str(layer.source())
+    if not layer.isValid():
+        print message
     assert layer.isValid(), message
     return layer, category
 
@@ -307,10 +250,10 @@ def check_images(control_image, test_image_path, tolerance=1000):
     :rtype: bool, str
     """
     messages = ''
-    platform = platform_name()
+    platform_name = get_platform_name()
     base_name, extension = os.path.splitext(control_image)
     platform_image = os.path.join(CONTROL_IMAGE_DIR, '%s-variant%s%s.png' % (
-        base_name, platform, extension))
+        base_name, platform_name, extension))
     messages += 'Checking for platform specific variant...\n'
     messages += test_image_path + '\n'
     messages += platform_image + '\n'
@@ -326,7 +269,7 @@ def check_images(control_image, test_image_path, tolerance=1000):
         'testing against all control images. Try adding %s in\n '
         'the file name if you want it to be detected for this\n'
         'platform which will speed up image comparison tests.\n' %
-        platform)
+        platform_name)
 
     # Ok there is no specific platform match so go ahead and match to any of
     # the control image and its variants...
@@ -417,13 +360,13 @@ def check_image(control_image_path, test_image_path, tolerance=1000):
         QtGui.QImage.Format_ARGB32_Premultiplied)
     difference_image.fill(152 + 219 * 256 + 249 * 256 * 256)
 
-    for myY in range(image_height):
-        for myX in range(image_width):
-            control_pixel = control_image.pixel(myX, myY)
-            test_pixel = test_image.pixel(myX, myY)
+    for y in range(image_height):
+        for x in range(image_width):
+            control_pixel = control_image.pixel(x, y)
+            test_pixel = test_image.pixel(x, y)
             if control_pixel != test_pixel:
                 mismatch_count += 1
-                difference_image.setPixel(myX, myY, QtGui.qRgb(255, 0, 0))
+                difference_image.setPixel(x, y, QtGui.qRgb(255, 0, 0))
     difference_path = unique_filename(
         prefix='difference-%s' % os.path.basename(control_image_path),
         suffix='.png',
@@ -503,22 +446,22 @@ class RedirectStreams(object):
         sys.stderr = self.old_stderr
 
 
-def platform_name():
+def get_platform_name():
     """Get a platform name for this host.
 
         e.g OSX10.8
         Windows7-SP1-AMD64
         LinuxMint-14-x86_64
     """
-    my_platform_system = platform.system()
-    if my_platform_system == 'Darwin':
+    platform_name = platform.system()
+    if platform_name == 'Darwin':
         name = 'OSX'
         name += '.'.join(platform.mac_ver()[0].split('.')[0:2])
         return name
-    elif my_platform_system == 'Linux':
+    elif platform_name == 'Linux':
         name = '-'.join(platform.dist()[:-1]) + '-' + platform.machine()
         return name
-    elif my_platform_system == 'Windows':
+    elif platform_name == 'Windows':
         name = 'Windows'
         win32_version = platform.win32_ver()
         platform_machine = platform.machine()

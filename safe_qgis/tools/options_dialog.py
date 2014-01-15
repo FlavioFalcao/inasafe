@@ -74,63 +74,62 @@ class OptionsDialog(QtGui.QDialog, Ui_OptionsDialogBase):
         self.cbxUseThread.setChecked(flag)
 
         flag = bool(settings.value(
-            'inasafe/visibleLayersOnlyFlag', True))
+            'inasafe/visibleLayersOnlyFlag', True, type=bool))
         self.cbxVisibleLayersOnly.setChecked(flag)
 
         flag = bool(settings.value(
-            'inasafe/set_layer_from_title_flag', True))
+            'inasafe/set_layer_from_title_flag', True, type=bool))
         self.cbxSetLayerNameFromTitle.setChecked(flag)
 
         flag = bool(settings.value(
-            'inasafe/setZoomToImpactFlag', True))
+            'inasafe/setZoomToImpactFlag', True, type=bool))
         self.cbxZoomToImpact.setChecked(flag)
         # whether exposure layer should be hidden after model completes
         flag = bool(settings.value(
-            'inasafe/setHideExposureFlag', False))
+            'inasafe/setHideExposureFlag', False, type=bool))
         self.cbxHideExposure.setChecked(flag)
 
         flag = bool(settings.value(
-            'inasafe/clip_to_viewport', True))
+            'inasafe/clip_to_viewport', True, type=bool))
         self.cbxClipToViewport.setChecked(flag)
 
         flag = bool(settings.value(
-            'inasafe/clip_hard', False))
+            'inasafe/clip_hard', False, type=bool))
         self.cbxClipHard.setChecked(flag)
 
         flag = bool(settings.value(
-            'inasafe/useSentry', False))
+            'inasafe/useSentry', False, type=bool))
         self.cbxUseSentry.setChecked(flag)
 
         flag = bool(settings.value(
-            'inasafe/show_intermediate_layers', False))
+            'inasafe/show_intermediate_layers', False, type=bool))
         self.cbxShowPostprocessingLayers.setChecked(flag)
 
         ratio = float(settings.value(
             'inasafe/defaultFemaleRatio',
-            DEFAULTS['FEM_RATIO']))
+            DEFAULTS['FEM_RATIO'], type=float))
         self.dsbFemaleRatioDefault.setValue(ratio)
 
         path = settings.value(
             'inasafe/keywordCachePath',
-            self.keyword_io.default_keyword_db_path())
+            self.keyword_io.default_keyword_db_path(), type=str)
         self.leKeywordCachePath.setText(path)
 
-        path = settings.value(
-            'inasafe/mapsLogoPath',
-            '')
-        self.leMapsLogoPath.setText(path)
+        path = settings.value('inasafe/orgLogoPath', '', type=str)
+        self.leOrgLogoPath.setText(path)
 
-        path = settings.value(
-            'inasafe/reportTemplatePath',
-            '')
+        path = settings.value('inasafe/reportTemplatePath', '', type=str)
         self.leReportTemplatePath.setText(path)
 
-        flag = bool(settings.value(
-            'inasafe/developer_mode', False))
+        disclaimer = settings.value('inasafe/reportDisclaimer', '', type=str)
+        self.txtDisclaimer.setPlainText(disclaimer)
+
+        flag = bool(
+            settings.value('inasafe/developer_mode', False, type=bool))
         self.cbxDevMode.setChecked(flag)
 
-        flag = bool(settings.value(
-            'inasafe/use_native_zonal_stats', False))
+        flag = bool(
+            settings.value('inasafe/use_native_zonal_stats', False, type=bool))
         self.cbxNativeZonalStats.setChecked(flag)
 
     def save_state(self):
@@ -170,11 +169,14 @@ class OptionsDialog(QtGui.QDialog, Ui_OptionsDialogBase):
             'inasafe/keywordCachePath',
             self.leKeywordCachePath.text())
         settings.setValue(
-            'inasafe/mapsLogoPath',
-            self.leMapsLogoPath.text())
+            'inasafe/orgLogoPath',
+            self.leOrgLogoPath.text())
         settings.setValue(
             'inasafe/reportTemplatePath',
             self.leReportTemplatePath.text())
+        settings.setValue(
+            'inasafe/reportDisclaimer',
+            self.txtDisclaimer.toPlainText())
         settings.setValue(
             'inasafe/developer_mode',
             self.cbxDevMode.isChecked())
@@ -205,25 +207,25 @@ class OptionsDialog(QtGui.QDialog, Ui_OptionsDialogBase):
         self.leKeywordCachePath.setText(file_name)
 
     @pyqtSignature('')  # prevents actions being handled twice
-    def on_toolMapsLogoPath_clicked(self):
+    def on_toolOrgLogoPath_clicked(self):
         """Auto-connect slot activated when logo file tool button is clicked.
         """
         # noinspection PyCallByClass,PyTypeChecker
         file_name = QtGui.QFileDialog.getOpenFileName(
             self,
-            self.tr('Set map logo file'),
+            self.tr('Set organisation logo file'),
             '',
             self.tr('Portable Network Graphics files (*.png *.PNG)'))
-        self.leMapsLogoPath.setText(file_name)
+        self.leOrgLogoPath.setText(file_name)
 
     @pyqtSignature('')  # prevents actions being handled twice
     def on_toolReportTemplatePath_clicked(self):
         """Auto-connect slot activated when report file tool button is clicked.
         """
         # noinspection PyCallByClass,PyTypeChecker
-        file_name = QtGui.QFileDialog.getOpenFileName(
+        dir_name = QtGui.QFileDialog.getExistingDirectory(
             self,
-            self.tr('Set report template'),
+            self.tr('Templates directory'),
             '',
-            self.tr('QGIS Composer templates (*.qpt *.QPT)'))
-        self.leReportTemplatePath.setText(file_name)
+            QtGui.QFileDialog.ShowDirsOnly)
+        self.leReportTemplatePath.setText(dir_name)

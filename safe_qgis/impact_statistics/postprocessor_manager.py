@@ -20,8 +20,9 @@ import logging
 
 from PyQt4 import QtCore
 
-from qgis.core import (
-    QgsFeatureRequest)
+from qgis.core import QgsFeatureRequest
+
+from third_party.odict import OrderedDict
 
 from safe.common.utilities import unhumanize_number, format_int
 
@@ -59,6 +60,7 @@ class PostprocessorManager(QtCore.QObject):
         self.aggregator = aggregator
         self.current_output_postprocessor = None
         self.attribute_title = None
+        self.function_parameters = None
 
     def _sum_field_name(self):
         return self.aggregator.prefix + 'sum'
@@ -78,11 +80,12 @@ class PostprocessorManager(QtCore.QObject):
 
         post_processor = self.output[self.current_output_postprocessor]
         #get the key position of the value field
-        key = post_processor[0][1].keyAt(0)
+        key = post_processor[0][1].keys()[0]
         #get the value
         # data[1] is the orderedDict
         # data[1][myFirstKey] is the 1st indicator in the orderedDict
-        if data[1][key]['value'] == self.aggregator.defaults['NO_DATA']:
+        if (data[1][key]['value'] == self.aggregator.get_default_keyword(
+                'NO_DATA')):
             position = -1
         else:
             position = data[1][key]['value']
@@ -90,11 +93,15 @@ class PostprocessorManager(QtCore.QObject):
 
         return position
 
-    def _generate_tables(self):
+    def _generate_tables(self, aoi_mode=True):
         """Parses the postprocessing output as one table per postprocessor.
 
         TODO: This should rather return json and then have a helper method to
         make html from the JSON.
+
+        :param aoi_mode: adds a Total in aggregation areas
+        row to the calculated table
+        :type aoi_mode: bool
 
         :returns: The html.
         :rtype: str
@@ -133,15 +140,36 @@ class PostprocessorManager(QtCore.QObject):
                 header.add(self.tr(calculation_name))
             table.add(header)
 
+            # used to calculate the totals row as per issue #690
+            postprocessor_totals = OrderedDict()
+
             for zone_name, calc in sorted_results:
                 row = m.Row(zone_name)
 
-                for _, calculation_data in calc.iteritems():
+                for indicator, calculation_data in calc.iteritems():
                     value = calculation_data['value']
-                    if value == self.aggregator.defaults['NO_DATA']:
+                    value = str(unhumanize_number(value))
+                    if value == self.aggregator.get_default_keyword('NO_DATA'):
                         has_no_data = True
                         value += ' *'
-                    row.add(value)
+                        try:
+                            postprocessor_totals[indicator] += 0
+                        except KeyError:
+                            postprocessor_totals[indicator] = 0
+                    else:
+                        value = int(value)
+                        try:
+                            postprocessor_totals[indicator] += value
+                        except KeyError:
+                            postprocessor_totals[indicator] = value
+                    row.add(format_int(value))
+                table.add(row)
+
+            if not aoi_mode:
+                # add the totals row
+                row = m.Row(self.tr('Total in aggregation areas'))
+                for _, total in postprocessor_totals.iteritems():
+                    row.add(format_int(total))
                 table.add(row)
 
             # add table to message
@@ -150,7 +178,8 @@ class PostprocessorManager(QtCore.QObject):
                 message.add(m.EmphasizedText(self.tr(
                     '* "%s" values mean that there where some problems while '
                     'calculating them. This did not affect the other '
-                    'values.') % (self.aggregator.defaults['NO_DATA'])))
+                    'values.') % (
+                        self.aggregator.get_default_keyword('NO_DATA'))))
 
         return message
 
@@ -172,8 +201,6 @@ class PostprocessorManager(QtCore.QObject):
             # iterate polygons
             for polygon_name, results in results_list:
                 if polygon_name in checked_polygon_names.keys():
-                    LOGGER.debug('%s postprocessor found multipart polygon '
-                                 'with name %s' % (postprocessor, polygon_name))
                     for result_name, result in results.iteritems():
                         first_part_index = checked_polygon_names[polygon_name]
                         first_part = self.output[postprocessor][
@@ -182,10 +209,12 @@ class PostprocessorManager(QtCore.QObject):
                         first_part_result = first_part_results[result_name]
 
                         # FIXME one of the parts was 'No data',
+                        # is it matematically correct to do no_data = 0?
                         # see http://irclogs.geoapt.com/inasafe/
                         # %23inasafe.2013-08-09.log (at 22.29)
 
-                        no_data = self.aggregator.defaults['NO_DATA']
+                        no_data = \
+                            self.aggregator.get_default_keyword('NO_DATA')
                         # both are No data
                         value = first_part_result['value']
                         result_value = result['value']
@@ -193,12 +222,12 @@ class PostprocessorManager(QtCore.QObject):
                             new_result = no_data
                         else:
                             # one is No data
-                            if value == no_data and result_value != no_data:
-                                first_part_result['value'] = 0
+                            if value == no_data:
+                                value = 0
                             # the other is No data
-                            elif value != no_data and result_value == no_data:
-                                result['value'] = 0
-                            #if we got here, none is No data
+                            elif result_value == no_data:
+                                result_value = 0
+                            # here none is No data
                             new_result = (
                                 unhumanize_number(value) +
                                 unhumanize_number(result_value))
@@ -223,7 +252,8 @@ class PostprocessorManager(QtCore.QObject):
         """Run any post processors requested by the impact function.
         """
         try:
-            requested_postprocessors = self.functionParams['postprocessors']
+            requested_postprocessors = self.function_parameters[
+                'postprocessors']
             postprocessors = get_postprocessors(requested_postprocessors)
         except (TypeError, KeyError):
             # TypeError is for when function_parameters is none
@@ -232,7 +262,7 @@ class PostprocessorManager(QtCore.QObject):
         LOGGER.debug('Running this postprocessors: ' + str(postprocessors))
 
         feature_names_attribute = self.aggregator.attributes[
-            self.aggregator.defaults['AGGR_ATTR_KEY']]
+            self.aggregator.get_default_keyword('AGGR_ATTR_KEY')]
         if feature_names_attribute is None:
             self.attribute_title = self.tr('Aggregation unit')
         else:
@@ -251,9 +281,9 @@ class PostprocessorManager(QtCore.QObject):
             # look if we need to look for a variable female ratio in a layer
             try:
                 female_ration_field = self.aggregator.attributes[
-                    self.aggregator.defaults['FEM_RATIO_ATTR_KEY']]
-                female_ratio_field_index = self.aggregator.layer.fieldNameIndex(
-                    female_ration_field)
+                    self.aggregator.get_default_keyword('FEM_RATIO_ATTR_KEY')]
+                female_ratio_field_index = \
+                    self.aggregator.layer.fieldNameIndex(female_ration_field)
 
                 # something went wrong finding the female ratio field,
                 # use defaults from below except block
@@ -266,9 +296,10 @@ class PostprocessorManager(QtCore.QObject):
                 try:
                     female_ratio = self.keyword_io.read_keywords(
                         self.aggregator.layer,
-                        self.aggregator.defaults['FEM_RATIO_KEY'])
+                        self.aggregator.get_default_keyword('FEM_RATIO_KEY'))
                 except KeywordNotFoundError:
-                    female_ratio = self.aggregator.defaults['FEM_RATIO']
+                    female_ratio = \
+                        self.aggregator.get_default_keyword('FEM_RATIO')
 
         # iterate zone features
         request = QgsFeatureRequest()
@@ -287,7 +318,7 @@ class PostprocessorManager(QtCore.QObject):
             # create dictionary of attributes to pass to postprocessor
             general_params = {
                 'target_field': self.aggregator.target_field,
-                'function_params': self.functionParams}
+                'function_params': self.function_parameters}
 
             if self.aggregator.statistics_type == 'class_count':
                 general_params['impact_classes'] = (
@@ -308,7 +339,8 @@ class PostprocessorManager(QtCore.QObject):
                 try:
                     # look if params are available for this postprocessor
                     parameters.update(
-                        self.functionParams['postprocessors'][key]['params'])
+                        self.function_parameters[
+                            'postprocessors'][key]['params'])
                 except KeyError:
                     pass
 
@@ -336,8 +368,11 @@ class PostprocessorManager(QtCore.QObject):
             # increment the index
             polygon_index += 1
 
-    def get_output(self):
+    def get_output(self, aoi_mode):
         """Returns the results of the post processing as a table.
+
+        :param aoi_mode: aoi mode of the aggregator.
+        :type aoi_mode: bool
 
         :returns: str - a string containing the html in the requested format.
         """
@@ -357,4 +392,4 @@ class PostprocessorManager(QtCore.QObject):
             except KeywordNotFoundError:
                 pass
 
-            return self._generate_tables()
+            return self._generate_tables(aoi_mode)

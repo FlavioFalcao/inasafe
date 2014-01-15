@@ -1,5 +1,6 @@
 import numpy
-from third_party.odict import OrderedDict
+from safe.common.utilities import OrderedDict
+from safe.defaults import get_defaults
 from safe.impact_functions.core import (
     FunctionProvider,
     get_hazard_layer,
@@ -11,7 +12,6 @@ from safe.impact_functions.core import (
 from safe.storage.raster import Raster
 from safe.common.utilities import (
     ugettext as tr,
-    get_defaults,
     format_int,
     verify,
     round_thousand,
@@ -241,6 +241,8 @@ class FloodEvacuationFunction(FunctionProvider):
                              'map_title': map_title,
                              'legend_notes': legend_notes,
                              'legend_units': legend_units,
-                             'legend_title': legend_title},
+                             'legend_title': legend_title,
+                             'evacuated': evacuated,
+                             'total_needs' : tot_needs},
                    style_info=style_info)
         return R

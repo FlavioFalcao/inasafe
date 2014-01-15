@@ -4,6 +4,7 @@ import os
 import sys
 import numpy
 import zipfile
+import platform
 import gettext
 from datetime import date
 import getpass
@@ -11,8 +12,21 @@ from tempfile import mkstemp
 from subprocess import PIPE, Popen
 import ctypes
 from numbers import Integral
+import math
 
 from safe.common.exceptions import VerificationError
+
+# Prefer python's own OrderedDict if it exists
+try:
+    #pylint: disable=W0611
+    from collections import OrderedDict
+    #pylint: enable=W0611
+except ImportError:
+    try:
+        from third_party.odict import OrderedDict
+    except ImportError:
+        raise RuntimeError(("Could not find an"
+                            "available OrderedDict implementation"))
 
 
 class MEMORYSTATUSEX(ctypes.Structure):
@@ -174,29 +188,6 @@ def unique_filename(**kwargs):
         pass
     return filename
 
-try:
-    # hmmm this is not so nice - would be nicer to find a way to make
-    # to make safe unaware of safe_qgis - perhaps this is a good case
-    # for monkey patching safe.common.utilities with a replacement
-    # get_defaults when safe_qgis initialises....Tim (June 2013)
-    # noinspection PyUnresolvedReferences
-    from safe_qgis.utilities.utilities import (
-        breakdown_defaults as get_qgis_defaults)
-
-    def get_defaults(default=None):
-        return get_qgis_defaults(theDefault=default)
-except ImportError:
-    #this is used when we are in safe without access to qgis (e.g. web )
-    from safe.defaults import DEFAULTS
-
-    def get_defaults(default=None):
-        if default is None:
-            return DEFAULTS
-        elif default in DEFAULTS:
-            return DEFAULTS[default]
-        else:
-            return None
-
 
 def zip_shp(shp_path, extra_ext=None, remove_file=False):
     """Zip shape file and its gang (.shx, .dbf, .prj).
@@ -288,15 +279,23 @@ def get_free_memory_osx():
         p = Popen('echo -e "\n$(top -l 1 | awk \'/PhysMem/\';)\n"',
                   shell=True, stdout=PIPE)
         stdout_string = p.communicate()[0].split('\n')[1]
-        # e.g. output (its a single line)
+        # e.g. output (its a single line) OSX 10.9 Mavericks
+        # PhysMem: 6854M used (994M wired), 1332M unused.
+        # output on Mountain lion
         # PhysMem: 1491M wired, 3032M active, 1933M inactive,
         # 6456M used, 1735M free.
     except OSError:
         raise OSError
-    stdout_list = stdout_string.split(',')
-    inactive = stdout_list[2].replace('M inactive', '').replace(' ', '')
-    free = stdout_list[4].replace('M free.', '').replace(' ', '')
-    return int(inactive) + int(free)
+    if float(platform.mac_ver()[0]) > 10.8:
+        stdout_list = stdout_string.split(',')
+        unused = stdout_list[1].replace('M unused', '').replace(' ', '')
+        return int(unused)
+
+    else:
+        stdout_list = stdout_string.split(',')
+        inactive = stdout_list[2].replace('M inactive', '').replace(' ', '')
+        free = stdout_list[4].replace('M free.', '').replace(' ', '')
+        return int(inactive) + int(free)
 
 
 def format_int(x):
@@ -566,3 +565,26 @@ def create_label(my_tuple, extra_label=None):
         return '[' + ' - '.join(my_tuple) + '] ' + str(extra_label)
     else:
         return '[' + ' - '.join(my_tuple) + ']'
+
+
+def get_utm_zone(longitude):
+    """
+    Return utm zone.
+    """
+    zone = int((math.floor((longitude + 180.0) / 6.0) + 1) % 60)
+    if zone == 0:
+        zone = 60
+    return zone
+
+
+def get_utm_epsg(longitude, latitude):
+    """
+    Return epsg code of the utm zone.
+    The code is based on the code:
+    http://gis.stackexchange.com/questions/34401
+    """
+    epsg = 32600
+    if latitude < 0.0:
+        epsg += 100
+    epsg += get_utm_zone(longitude)
+    return epsg
