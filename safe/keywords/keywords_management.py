@@ -109,18 +109,20 @@ class KeywordsLayerImpact(KeywordsLayer):
         :param hazard_subcategory: The type of hazard.
         :type hazard_subcategory: str
 
-        :param buildings_total: Total number of buildings.
-        :type buildings_total: int
+        :param buildings_total: Total building types.
+        :type buildings_total: dict
 
-        :param buildings_affected: Number of affected buildings.
-        :type buildings_affected: int
+        :param buildings_affected: Number of affected buildings by type. This
+         is a dict of dicts
+        :type buildings_affected: dict
         """
         self.set_impact_assesment(
             'buildings', hazard_subcategory)
         self.impact_assessment['total_buildings'] = sum(
             buildings_total.values())
-        self.impact_assessment['affected_buildings'] = sum(
-            buildings_affected.values())
+        for key in buildings_affected:
+            self.impact_assessment[key] = sum(
+                buildings_affected[key].values())
 
     def set_impact_assesment_population(
             self, hazard_subcategory,
@@ -175,9 +177,12 @@ class KeywordsLayerImpact(KeywordsLayer):
             building_type = building_type.replace('_', ' ')
             building_type = tr(building_type)
             self.buildings_breakdown[building_type] = {
-                "total": buildings[building_type],
-                "affected": buildings_breakdown[building_type]
+                "total": buildings[building_type]
             }
+            for key in buildings_breakdown:
+                self.buildings_breakdown[building_type][key] = (
+                    buildings_breakdown[key][building_type])
+
 
     def set_title(self, title):
         self.title = title

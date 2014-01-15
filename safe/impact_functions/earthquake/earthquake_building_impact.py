@@ -8,6 +8,8 @@ from safe.storage.vector import Vector
 from safe.common.utilities import (ugettext as tr, format_int)
 from safe.common.tables import Table, TableRow
 from safe.engine.interpolation import assign_hazard_values_to_exposure_data
+from safe.keywords.keywords_management import ImpactKeywords
+from safe.keywords.table_formatter import TableFormatter
 
 import logging
 
@@ -26,6 +28,7 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
     """
 
     target_field = 'Shake_cls'
+    function_id = 'EB1'  # Earthquake Buildings 1
     statistics_type = 'class_count'
     statistics_classes = [0, 1, 2, 3]
     title = tr('Be affected')
@@ -41,6 +44,11 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
         """Earthquake impact to buildings (e.g. from OpenStreetMap)
         :param layers: All the input layers (Hazard Layer and Exposure Layer)
         """
+
+        impact_keywords = ImpactKeywords()
+        impact_keywords.primary_layer.set_function_details(self)
+        impact_keywords.primary_layer.set_title(
+             tr('Estimated buildings affected'))
 
         LOGGER.debug('Running earthquake building impact')
 
@@ -62,6 +70,8 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
         # Extract data
         my_hazard = get_hazard_layer(layers)    # Depth
         my_exposure = get_exposure_layer(layers)  # Building locations
+        impact_keywords.set_provenance_layer(my_hazard, 'impact_layer')
+        impact_keywords.set_provenance_layer(my_exposure, 'exposure_layer')
 
         question = get_question(my_hazard.get_name(),
                                 my_exposure.get_name(),
@@ -191,6 +201,17 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
         if is_nexis:
             table_body.append(tr('Values are in units of 1 million Australian '
                                  'Dollars'))
+
+        impact_keywords.primary_layer.set_buildings_breakdown(
+            buildings, affected_buildings)
+        impact_keywords.primary_layer.set_impact_assesment_buildings(
+            'buildings', 'earthquake', buildings, affected_buildings)
+
+        # Create the table here. The keywords object will be passed on,
+        # but let us make the loop small for now...
+        tf = TableFormatter(impact_keywords)
+        impact_summary = tf().toNewlineFreeString()
+        impact_table = impact_summary
 
         impact_summary = Table(table_body).toNewlineFreeString()
         impact_table = impact_summary

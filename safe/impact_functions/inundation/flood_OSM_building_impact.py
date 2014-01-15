@@ -227,9 +227,10 @@ class FloodBuildingImpactFunction(FunctionProvider):
                 del affected_buildings[usage]
 
         impact_keywords.primary_layer.set_buildings_breakdown(
-            buildings, affected_buildings)
+            buildings, {'affected_buildings': affected_buildings})
         impact_keywords.primary_layer.set_impact_assesment_buildings(
-            'buildings', 'flood', buildings, affected_buildings)
+            'buildings', 'flood', buildings,
+            {'affected': affected_buildings})
 
         # Create the table here. The keywords object will be passed on,
         # but let us make the loop small for now...
