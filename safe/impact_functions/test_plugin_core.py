@@ -1,18 +1,21 @@
+# coding=utf-8
 import unittest
 import logging
 import os
 
-from core import FunctionProvider
-from core import requirements_collect
-from core import requirement_check
-from core import requirements_met
-from core import get_admissible_plugins
-from core import get_function_title
-from core import get_plugins_as_table
-from core import parse_single_requirement
-from core import get_metadata
-from core import evacuated_population_weekly_needs
-from utilities import pretty_string
+from safe.impact_functions.core import (
+    FunctionProvider,
+    requirements_collect,
+    requirement_check,
+    requirements_met,
+    get_admissible_plugins,
+    get_function_title,
+    get_plugins_as_table,
+    parse_single_requirement,
+    get_metadata,
+    evacuated_population_weekly_needs,
+    aggregate)
+from safe.impact_functions.utilities import pretty_string
 from safe.common.utilities import format_int
 # from safe.impact_functions.core import get_dict_doc_func
 
@@ -292,6 +295,29 @@ class Test_plugin_core(unittest.TestCase):
         assert (result['rice'] == 40 and result['drinking_water'] == 30
                 and result['water'] == 20 and result['family_kits'] == 10
                 and result['toilets'] == 2)
+
+    def test_aggregate(self):
+        """Test aggregate function behaves as expected."""
+        class MockRasterData(object):
+            """Fake raster data object."""
+            def __init__(self):
+                self.is_point_data = False
+                self.is_raster_data = True
+
+        class MockOtherData(object):
+            """Fake other data object."""
+            def __init__(self):
+                self.is_point_data = False
+                self.is_raster_data = False
+
+        # Test raster data
+        raster_data = MockRasterData()
+        result = aggregate(raster_data)
+        self.assertIsNone(result)
+
+        # Test Not Point Data nor raster Data:
+        other_data = MockOtherData()
+        self.assertRaises(Exception, aggregate, other_data)
 
 
 if __name__ == '__main__':

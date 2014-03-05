@@ -25,23 +25,24 @@ from safe.keywords.keywords_management import ImpactKeywords
 from safe.keywords.table_formatter import TableFormatter
 
 
+# noinspection PyClassHasNoInit
 class FloodEvacuationFunction(FunctionProvider):
+    # noinspection PyUnresolvedReferences
     """Impact function for flood evacuation
 
-    :author AIFDR
-    :rating 4
-    :param requires category=='hazard' and \
-                    subcategory in ['flood', 'tsunami'] and \
-                    layertype=='raster' and \
-                    unit=='m'
+        :author AIFDR
+        :rating 4
+        :param requires category=='hazard' and \
+                        subcategory in ['flood', 'tsunami'] and \
+                        layertype=='raster' and \
+                        unit=='m'
 
-    :param requires category=='exposure' and \
-                    subcategory=='population' and \
-                    layertype=='raster'
-    """
+        :param requires category=='exposure' and \
+                        subcategory=='population' and \
+                        layertype=='raster'
+        """
 
     title = tr('Need evacuation')
-    function_id = 'FloodEvacuationFunction'
     defaults = get_defaults()
 
     # Function documentation
@@ -97,8 +98,7 @@ class FloodEvacuationFunction(FunctionProvider):
     def run(self, layers):
         """Risk plugin for flood population evacuation
 
-        Input
-          layers: List of layers expected to contain
+        :param layers: List of layers expected to contain
               my_hazard: Raster layer of flood depth
               my_exposure: Raster layer of population data on the same grid
               as my_hazard
@@ -106,9 +106,10 @@ class FloodEvacuationFunction(FunctionProvider):
         Counts number of people exposed to flood levels exceeding
         specified threshold.
 
-        Return
-          Map of population exposed to flood levels exceeding the threshold
-          Table with number of people evacuated and supplies required
+        :returns: Map of population exposed to flood levels exceeding the
+            threshold. Table with number of people evacuated and supplies
+            required.
+        :rtype: tuple
         """
 
         impact_keywords = ImpactKeywords()
@@ -130,26 +131,26 @@ class FloodEvacuationFunction(FunctionProvider):
                'Expected thresholds to be a list. Got %s' % str(thresholds))
 
         # Extract data as numeric arrays
-        D = my_hazard.get_data(nan=0.0)  # Depth
+        data = my_hazard.get_data(nan=0.0)  # Depth
 
         # Calculate impact as population exposed to depths > max threshold
-        P = my_exposure.get_data(nan=0.0, scaling=True)
+        population = my_exposure.get_data(nan=0.0, scaling=True)
 
         # Calculate impact to intermediate thresholds
         counts = []
         # merely initialize
-        my_impact = None
+        impact = None
         for i, lo in enumerate(thresholds):
             if i == len(thresholds) - 1:
                 # The last threshold
-                my_impact = M = numpy.where(D >= lo, P, 0)
+                impact = medium = numpy.where(data >= lo, population, 0)
             else:
                 # Intermediate thresholds
                 hi = thresholds[i + 1]
-                M = numpy.where((D >= lo) * (D < hi), P, 0)
+                medium = numpy.where((data >= lo) * (data < hi), population, 0)
 
             # Count
-            val = int(numpy.sum(M))
+            val = int(numpy.sum(medium))
 
             # Don't show digits less than a 1000
             val = round_thousand(val)
@@ -157,7 +158,7 @@ class FloodEvacuationFunction(FunctionProvider):
 
         # Count totals
         evacuated = counts[-1]
-        total = int(numpy.sum(P))
+        total = int(numpy.sum(population))
         # Don't show digits less than a 1000
         total = round_thousand(total)
 
@@ -180,9 +181,10 @@ class FloodEvacuationFunction(FunctionProvider):
         impact_table = impact_summary
 
         # check for zero impact
-        if numpy.nanmax(my_impact) == 0 == numpy.nanmin(my_impact):
+        if numpy.nanmax(impact) == 0 == numpy.nanmin(my_impact):
             question = get_question(
                 my_hazard.get_name(), my_exposure.get_name(), self)
+        if numpy.nanmax(impact) == 0 == numpy.nanmin(impact):
             table_body = [
                 question,
                 TableRow([(tr('People in %.1f m of water') % thresholds[-1]),
@@ -194,7 +196,7 @@ class FloodEvacuationFunction(FunctionProvider):
         # Create style
         colours = ['#FFFFFF', '#38A800', '#79C900', '#CEED00',
                    '#FFCC00', '#FF6600', '#FF0000', '#7A0000']
-        classes = create_classes(my_impact.flat[:], len(colours))
+        classes = create_classes(impact.flat[:], len(colours))
         interval_classes = humanize_class(classes)
         style_classes = []
 

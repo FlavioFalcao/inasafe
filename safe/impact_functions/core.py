@@ -43,7 +43,7 @@ class PluginMount(type):
 # pylint: enable=W0613,C0203
 
 
-class FunctionProvider:
+class FunctionProvider(object):
     """Mount point for impact_functions.
 
     Plugins implementing this reference should provide the following method:
@@ -88,12 +88,13 @@ def evacuated_population_weekly_needs(
     :param population: The number of evacuated population.
     :type: int, float
 
+    :param human_names: A flag whether to use human names for minimum needs
+        items or not
+    :type human_names: bool
+
     :param minimum_needs: Ratios to use when calculating minimum needs.
         Defaults to perka 7 as described in assumptions below.
     :type minimum_needs: dict
-
-    :param detailed: Flag to get detailed needs.
-    :type detailed: bool
 
     :returns: The weekly needs for the evacuated population.
     :rtype: dict
@@ -105,11 +106,11 @@ def evacuated_population_weekly_needs(
     * assume 5 people per family (not in perka - 0.2 people per family)
     * 20 people per toilet (0.05 per person)
     """
-    rice = 'Rice'
-    drinking_water = 'Drinking Water'
-    water = 'Water'
-    family_kits = 'Family Kits'
-    toilets = 'Toilets'
+    rice = tr('Rice')
+    drinking_water = tr('Drinking Water')
+    water = tr('Water')
+    family_kits = tr('Family Kits')
+    toilets = tr('Toilets')
     if not minimum_needs:
         minimum_needs = default_minimum_needs()
 
@@ -225,8 +226,8 @@ def get_plugins(name=None):
             dict([(p.__name__, p) for p in FunctionProvider.plugins]))
 
         msg = ('No plugin named "%s" was found. '
-               'List of available plugins is: %s'
-               % (name, ', '.join(plugins_dict.keys())))
+               'List of available plugins is: \n%s'
+               % (name, ',\n '.join(plugins_dict.keys())))
         if name not in plugins_dict:
             raise RuntimeError(msg)
 
@@ -611,7 +612,7 @@ def aggregate(data=None, boundaries=None,
     Output:
         Dictionary of {boundary_name: aggregated value}
     """
-
+    res = None
     if data.is_point_data:
         res = aggregate_point_data(data, boundaries,
                                    attribute_name, aggregation_function)
@@ -625,7 +626,6 @@ def aggregate(data=None, boundaries=None,
         msg = ('Input argument "data" must be point or raster data. '
                'I got type: %s' % data.get_geometry_type())
         raise Exception(msg)
-
     return res
 
 

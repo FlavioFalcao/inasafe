@@ -19,7 +19,7 @@ __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
 
 import os
 import unittest
-from shake_grid_converter import convert_mmi_data
+from safe.common.shake_grid_converter import convert_mmi_data
 from safe.common.utilities import unique_filename, temp_dir
 
 from safe.common.testing import TESTDATA
@@ -40,7 +40,7 @@ class ConverterTest(unittest.TestCase):
             my_result, my_expected_result,
             'Result path not as expected')
         exists = os.path.exists(my_result)
-        self.assertTrue(exists, 'File result : %s is not exist' % my_result)
+        self.assertTrue(exists, 'File result : %s does not exist' % my_result)
         exists = os.path.exists(my_result[:-3] + 'keywords')
         self.assertTrue(
             exists,

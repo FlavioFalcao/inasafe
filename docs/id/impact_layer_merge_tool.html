@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>The Impact Layer Merge Tool &mdash; dokumentasi InaSAFE Documentation 1.2.0</title>
+    <title>Tool Menggabungkan Layer Dampak &mdash; dokumentasi InaSAFE Documentation 1.2.0</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="_static/jQuery.equalHeights.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="top" title="dokumentasi InaSAFE Documentation 1.2.0" href="index.html" />
-    <link rel="prev" title="Mendownload OpenStreetMap" href="openstreetmap_downloader.html" />
+    <link rel="prev" title="OpenStreetMap Downloader" href="openstreetmap_downloader.html" />
 
 <style>
     .navbar-fixed-top .navbar-inner, .navbar-fixed-bottom .navbar-inner
@@ -81,6 +81,23 @@
 <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
 
+<!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(["setDoNotTrack", true]);
+  _paq.push(["trackPageView"]);
+  _paq.push(["enableLinkTracking"]);
+
+  (function() {
+    var u=(("https:" == document.location.protocol) ? "https" : "http") + "://piwik.hotosm.org/";
+    _paq.push(["setTrackerUrl", u+"piwik.php"]);
+    _paq.push(["setSiteId", "2"]);
+    var d=document, g=d.createElement("script"), s=d.getElementsByTagName("script")[0]; g.type="text/javascript";
+    g.defer=true; g.async=true; g.src=u+"piwik.js"; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Piwik Code -->
+
 
 <link rel="shortcut icon" href="_static/img/favicon.ico">
 <link rel="apple-touch-icon-precomposed" sizes="144x144"
@@ -94,6 +111,7 @@
 
   </head>
   <body>
+
     
     <div class="navbar navbar-inverse navbar-fixed-top">
         <div class="navbar-inner">
@@ -131,7 +149,7 @@
                 <li class="right"
                  >
                 <a href="openstreetmap_downloader.html"
-                   title="Mendownload OpenStreetMap"
+                   title="OpenStreetMap Downloader"
                    style="z-index:;"
                 accesskey="P">sebelum</a>
                 </li>
@@ -143,7 +161,7 @@
                 </li>
                 
                 
-                <li><a href="#">The Impact Layer Merge Tool</a></li>
+                <li><a href="#">Tool Menggabungkan Layer Dampak</a></li>
             </ul>
         </div>
     </div> 
@@ -156,63 +174,126 @@
         <div class="span12">
                 
   <div class="section" id="the-impact-layer-merge-tool">
-<span id="toolbar-impact-layer-merge-tool"></span><h1>The Impact Layer Merge Tool<a class="headerlink" href="#the-impact-layer-merge-tool" title="Link permanent untuk headline ini">¶</a></h1>
-<p>In some cases you may wish to create a report containing the combined output of
-two impact functions for the same area. For example You may carry out an
-assessment of the impact of a flood on population and on buildings and combine
-the results into a single report. The impact layer merge tool allows you to do
-this.</p>
+<span id="toolbar-impact-layer-merge-tool"></span><h1>Tool Menggabungkan Layer Dampak<a class="headerlink" href="#the-impact-layer-merge-tool" title="Link permanent untuk headline ini">¶</a></h1>
+<p>Dalam beberapa kasus Anda mungkin ingin membuat sebuah laporan yang berisi kombinasi dari dua fungsi dampak di satu area yang sama untuk <em>ancaman yang sama, keterpaparan yang berbeda*</em>. Sebagai contoh Anda mungkin ingin melihat hasil kajian dari dampak banjir terhadap populasi dan bangunan dan menggabungkan keduanya kedalam satu laporan. Tool merger/menggabungkan layer dampak akan membantu anda untuk membuat hal tersebut.</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/impact_merge_dialog.png"><img alt="Opened impact merge dialog" src="_images/impact_merge_dialog.png" style="width: 412.5px; height: 483.0px;" /></a>
-<p class="caption">Opened impact merge dialog</p>
+<a class="reference internal image-reference" href="_images/impact_merge_dialog.png"><img alt="Opened impact merge dialog" src="_images/impact_merge_dialog.png" style="width: 396.75px; height: 516.0px;" /></a>
+<p class="caption">Tampilan dialog Menggabungkan Layer Dampak yang telah terbuka</p>
 </div>
 <div class="section" id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link permanent untuk headline ini">¶</a></h2>
-<p>In order to use this tool, please bear in mind the following requirements:</p>
+<h2>Prasyarat<a class="headerlink" href="#prerequisites" title="Link permanent untuk headline ini">¶</a></h2>
+<p>Untuk menggunakan tool ini, harap diperhatikan beberapa persyaratan berikut:</p>
 <ul class="simple">
-<li>Both impact layers should be loaded in your current project.</li>
-<li>Both impact layers should have been created for the same geographic region.</li>
-<li>The same aggregation area should be used for both assessments.</li>
+<li><p class="first">Kedua layer dampak harus dimuat di proyek yang sedang anda buka saat ini.</p>
+</li>
+<li><p class="first">Kedua layer dampak harus dibuat pada wilayah geografis yang sama.</p>
+</li>
+<li><p class="first">Daerah agregrasi yang sama harus digunakan untuk kedua penilaian.</p>
+</li>
 </ul>
 </div>
 <div class="section" id="procedure">
-<h2>Procedure<a class="headerlink" href="#procedure" title="Link permanent untuk headline ini">¶</a></h2>
-<p>To use this tool, follow this procedure:</p>
+<h2>Prosedur<a class="headerlink" href="#procedure" title="Link permanent untuk headline ini">¶</a></h2>
+<p>Untuk menggunakan alat ini, ikuti langkah berikut:</p>
 <ul class="simple">
-<li>Run an impact assessment for an area using aggregation. e.g.Flood Impact on
-Buildings aggregated by municipal boundaries.</li>
-<li>Run a second impact assessment for the same area using the same aggregation.
-e.g. Flood Impact on People aggregated by municipal boundaries.</li>
-<li>Open impact merge tool and select each impact layer from the pick lists
-provided.</li>
-<li>Select the aggregation layer that was used to generate the first and second
-impact layer.</li>
-<li>Select an output directory.</li>
-<li>Click OK to generate the per aggregation area combined summaries.</li>
+<li><p class="first">Jalankan penilaian dampak untuk suatu daerah menggunakan agregasi, misalnya  bangunan terdampak banjir diagregasi berdasarkan batas kabupaten/kota.</p>
+</li>
+<li><p class="first">Jalankan penilaian dampak kedua untuk daerah yang sama menggunakan agregasi yang sama, misalnya jumlah penduduk terdampak banjir diagregasi berdasarkan batas kabupaten/kota.</p>
+</li>
+<li><p class="first">Buka tool Menggabungkan Layer Dampak InaSAFE dan pilih layer dampak dari daftar yang tersedia.</p>
+</li>
+<li><p class="first">Pilih layer agregasi yang digunakan untuk menghasilkan layer terdampak pertama dan kedua.</p>
+</li>
+<li><p class="first">Pilih direktori output.</p>
+</li>
+<li><p class="first">Berikan tanda centang &#8216;Gunakan Template Laporan Terkostumisasi&#8217; dan pilih berkas <em>template</em> jika anda menginginkan untuk menggunakan <em>template</em> anda sendiri. Harap diperhatikan bahwa semua komponen pembuatan peta yang dibutuhkan harus dipenuhi.</p>
+</li>
+<li><p class="first">Klik OK untuk menghasilkan ringkasan kedua layer terdampak per area agregasi.</p>
+</li>
 </ul>
 </div>
 <div class="section" id="generated-outputs">
-<h2>Generated outputs<a class="headerlink" href="#generated-outputs" title="Link permanent untuk headline ini">¶</a></h2>
-<p>The tool will generate a PDF per aggregation area. The PDFs will be placed in
-the designated output directory after completion of the merge process. The
-output will consist of a map page and a table page. These are illustrated
-below:</p>
+<h2><em>Output</em> yang dihasilkan<a class="headerlink" href="#generated-outputs" title="Link permanent untuk headline ini">¶</a></h2>
+<p><em>Tool</em> ini akan membuat PDF untuk setiap daerah agregrasi. PDF yang dibentuk akan di tempatkan pada direktori yang dituju setelah selesai proses penggabungan. <em>Output</em> yang dihasilkan akan terdiri dari halaman peta dan halaman tabel. Seperti yang diilustrasikan dibawah ini:</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/impact_merge_map.png"><img alt="Impact merge report - map page" src="_images/impact_merge_map.png" style="width: 424.5px; height: 596.25px;" /></a>
-<p class="caption">Map page generated by the impact merge tool.</p>
+<a class="reference internal image-reference" href="_images/impact_merge_map.png"><img alt="Impact merge report - map page" src="_images/impact_merge_map.png" style="width: 627.75px; height: 442.5px;" /></a>
+<p class="caption">Halaman peta yang dihasilkan oleh <em>tool</em> penggabungkan <em>layer</em> dampak InaSAFE.</p>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/impact_merge_table.png"><img alt="Impact merge report - table page" src="_images/impact_merge_table.png" style="width: 520.5px; height: 739.5px;" /></a>
-<p class="caption">Table page generated by the impact merge tool.</p>
+<a class="reference internal image-reference" href="_images/impact_merge_table.png"><img alt="Impact merge report - table page" src="_images/impact_merge_table.png" style="width: 625.5px; height: 440.25px;" /></a>
+<p class="caption">Halaman tabel yang dihasilkan oleh <em>tool</em> penggabungan <em>layer</em> dampak InaSAFE.</p>
 </div>
-<p>In the case of impact assessments where <strong>no</strong> aggregation has been used, only
-a single pdf report is generated. In the case of impact assessments where
-aggregation <strong>has</strong> been used, one pdf is generated per aggregation area.</p>
+<p>Dalam beberapa kasus dari pengkajian dampak. Saat pengguna memutuskan untuk tidak menggunakan agregrasi, hasil laporan yang dihasilkan hanya berupa satu pdf saja. Namun ketika pengguna memutuskan pengkajian dampak menggunakan agregasi, satu pdf akan dihasilkan untuk setiap daerah agregrasi.</p>
 <div class="admonition note">
 <p class="first admonition-title">Catatan</p>
-<p class="last">After report generation completes, you need to manually open the
-output directly with your file manager in order to view the resulting PDFs.</p>
+<p class="last">Setelah pembuatan laporan selesai, direktori <em>output</em> akan terbuka secara otomatis.</p>
 </div>
+</div>
+<div class="section" id="using-customized-template">
+<h2>Menggunakan <em>Template</em> Terkostumisasi<a class="headerlink" href="#using-customized-template" title="Link permanent untuk headline ini">¶</a></h2>
+<p><em>Template</em> laporan bawaan berada di <tt class="file docutils literal"><span class="pre">/resources/qgis-composer-templates/merged-report.qpt</span></tt>. Jika <em>template</em> tersebut tidak dapat memenuhi kebutuhan anda, anda dapat menggunakan <em>template</em> laporan anda sendiri. Sebelum menggunakan <em>template</em> laporan anda sendiri, pastikan bahwa <em>template</em> Anda terdiri dari elemen-elemen berikut dengan ID:</p>
+<ul class="simple">
+<li><p class="first"><strong>impact-map</strong>, berjenis QgsComposerMap</p>
+</li>
+<li><p class="first"><strong>safe-logo</strong>, berjenis QgsComposerPicture</p>
+</li>
+<li><p class="first"><strong>summary-report</strong>, berjenis QgsComposerLabel</p>
+</li>
+<li><p class="first"><strong>aggregation-area</strong>, berjenis QgsComposerLabel</p>
+</li>
+<li><p class="first"><strong>map-scale</strong>, berjenis QgsComposerScaleBar</p>
+</li>
+<li><p class="first"><strong>map-legend</strong>, berjenis QgsComposerLegend</p>
+</li>
+<li><p class="first"><strong>organisation-logo</strong>, berjenis QgsComposerPicture</p>
+</li>
+<li><p class="first"><strong>merged-report-table</strong>, sebuah QgsComposerHTML</p>
+</li>
+</ul>
+<p>Jika salah satu dari elemen tersebut tidak tersedia didalam <em>template</em> laporan, QGIS akan memberi Anda informasi mengenai elemen apa yang kurang dari <em>template</em> tersebut.</p>
+<div class="admonition note">
+<p class="first admonition-title">Catatan</p>
+<p class="last">Anda dapat mengatur elemen-elemen tersebut di segala posisi yang Anda inginkan.</p>
+</div>
+</div>
+<div class="section" id="map-template-elements">
+<h2>Peta <em>Template</em> Elemen<a class="headerlink" href="#map-template-elements" title="Link permanent untuk headline ini">¶</a></h2>
+<p>Dalam ketentuan penggantian, ada tiga kelompok elemen didalam <em>template</em>:</p>
+<p>1. Elements that can be changed on InaSAFE Options tool. To change the value of these elements,
+please go to <strong>InaSAFE Option</strong> tools and change the value of the related field.
+Those elements are:</p>
+<ul class="simple">
+<li><p class="first"><strong>organisation-logo</strong>. Ini sesuai dengan <em>field</em> <strong>Logo Organisasi</strong> pada <em>tool</em> pilihan InaSAFE. Jika anda tidak mengisi <em>field</em> ini, maka logo bawaan, <strong>supporters.png</strong>, akan digunakan.</p>
+</li>
+<li><p class="first"><strong>Penolakan</strong>. Berpengaruh pada kolom <strong>Teks Penolakan</strong> pada tool InaSAFE Options. Jika anda tdak mengisi kolom ini, maka pengaturan bawaan akan digunakan: &#8220;InaSAFE telah dikembangkan secara bersama-sama oleh Pemerintah Indonesia-BNPB, Pemerintah Australia-AIFDR, dan World Bank-GFDRR. Instansi-instansi tersebut dan pengembang perangkat lunak dari InaSAFE tidak bertanggung jawab atas kebenaran output dari InaSAFE atau keputusan yang diberikan sebagai konsekuensinya.&#8221;</p>
+</li>
+</ul>
+<p>2. Elements containing tokens. The id of these element is not significant, only the token
+it contains. At render time, any of these tokens will be replaced. If you want to have a
+label containing value of these elements, enclose these elements with [] on a label i.e
+<strong>[impact-title]</strong> or <strong>[hazard-title]</strong>. Those elements are listed below:</p>
+<ul class="simple">
+<li><p class="first"><strong>impact-title</strong>. Menandakan judul dari dua dampak. Nilai akan menjadi &#8220;<em>judul_dampak_pertama</em> dan <em>judul_dampak_kedua</em>&#8220;</p>
+</li>
+<li><p class="first"><strong>hazard-title</strong>. Mengindikasikan judul bencana yang digunakan untuk membuat <em>layer</em> dampak.</p>
+</li>
+</ul>
+<p>3. Elements that are direcly updated by the renderer. All of these elements below are
+generated automatically by the tools.</p>
+<ul class="simple">
+<li><p class="first"><strong>impact-map</strong>. Terdiri dari peta dua <em>layer</em> dampak.</p>
+</li>
+<li><p class="first"><strong>summary-report</strong>. Terdiri dari ringkasan dampak dari dua <em>layer</em> dampak.</p>
+</li>
+<li><p class="first"><strong>aggregation-area</strong>. Terdiri dari nama daerah agregasi.</p>
+</li>
+<li><p class="first"><strong>map-scale</strong>. Mengindikasikan skala dari peta. Agar dapat bekerja dengan segala jenis proyeksi, kami menyarankan agar Anda menggunakan skala bar numerik.</p>
+</li>
+<li><p class="first"><strong>map-legend</strong>. Menyajikan legenda dari penggabungan <em>layer</em> dampak. Pengaturan bawaan dari <em>template</em> legenda peta diatur kedalam 2 kolom yang menggambarkan masing-masing legenda <em>layer</em> dampak.</p>
+</li>
+<li><p class="first"><strong>merged-report-table</strong>. Ini terdiri dari informasi detail dari setiap dampak.</p>
+</li>
+</ul>
 </div>
 </div>
 
@@ -235,7 +316,8 @@ output directly with your file manager in order to view the resulting PDFs.</p>
             This document is licensed under a
             <a rel="license" href="http://creativecommons.org/licenses/by/3.0/au/deed.en_GB">Creative Commons Attribution 3.0 Australia License.</a><br>
             <a href="http://creativecommons.org/licenses/by/3.0/au/deed.en_GB"><b>CCByA</b></a>,
-            Copyright 2013, BNPB/Australian Government/World Bank.
+            Copyright 2014, Indonesian Government-BNPB, Australian
+            Government-AIFDR and the World Bank-GFDRR.
         </div>
     </div>
 

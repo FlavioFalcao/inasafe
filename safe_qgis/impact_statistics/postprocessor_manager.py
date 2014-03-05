@@ -63,7 +63,7 @@ class PostprocessorManager(QtCore.QObject):
         self.function_parameters = None
 
     def _sum_field_name(self):
-        return self.aggregator.prefix + 'sum'
+        return self.aggregator.sum_field_name()
 
     def _sort_no_data(self, data):
         """Check if the value field of the postprocessor is NO_DATA.
@@ -301,6 +301,14 @@ class PostprocessorManager(QtCore.QObject):
                     female_ratio = \
                         self.aggregator.get_default_keyword('FEM_RATIO')
 
+        if 'BuildingType' or 'RoadType' in postprocessors:
+            try:
+                key_attribute = self.keyword_io.read_keywords(
+                    self.aggregator.exposure_layer, 'key_attribute')
+            except KeywordNotFoundError:
+                #use 'type' as default
+                key_attribute = 'type'
+
         # iterate zone features
         request = QgsFeatureRequest()
         request.setFlags(QgsFeatureRequest.NoGeometry)
@@ -352,6 +360,9 @@ class PostprocessorManager(QtCore.QObject):
                                 'FEM_RATIO']
                         LOGGER.debug(female_ratio)
                     parameters['female_ratio'] = female_ratio
+
+                if key == 'BuildingType' or key == 'RoadType':
+                    parameters['key_attribute'] = key_attribute
 
                 value.setup(parameters)
                 value.process()

@@ -31,6 +31,7 @@ from os.path import join
 import qgis  # pylint: disable=W0611
 
 from unittest import TestCase, skipIf
+# noinspection PyPackageRequirements
 from PyQt4 import QtCore
 
 from safe_qgis.safe_interface import temp_dir, unique_filename
@@ -503,9 +504,17 @@ class TestDock(TestCase):
 
         message = ('Result not as expected: %s' % result)
         # This is the expected number of population might be affected
-        self.assertTrue(format_int(30938000) in result, message)
-        self.assertTrue(format_int(68280000) in result, message)
-        self.assertTrue(format_int(157551000) in result, message)
+        self.assertTrue(format_int(30938000) in result, message)  # high
+        #self.assertTrue(format_int(68280000) in result, message)
+        #self.assertTrue(format_int(157551000) in result, message)
+        # The 2 asserts above are not valid anymore after the fix we made to
+        # CategorisedHazardPopulationImpactFunction
+        # Look at the fix here:
+        # (https://github.com/AIFDR/inasafe/commit/aa5b3d72145c031c91f4d101b830
+        # 8228915c248d#diff-378093670f4ebd60b4487af9b7c2e164)
+        # New Asserts
+        self.assertTrue(format_int(0) in result, message)  # medium
+        self.assertTrue(format_int(256769000) in result, message)  # low
 
     #noinspection PyArgumentList
     def test_runEarthquakeBuildingImpactFunction(self):
@@ -691,6 +700,7 @@ class TestDock(TestCase):
         set_jakarta_extent()
 
         # Run manually so we can get the output layer
+        DOCK.clip_parameters = DOCK.get_clip_parameters()
         DOCK.prepare_aggregator()
         DOCK.aggregator.validate_keywords()
         DOCK.setup_calculator()
@@ -742,10 +752,8 @@ class TestDock(TestCase):
         message = 'Result not as expected: %s' % result
         self.assertTrue(format_int(2366) in result, message)
 
-    @unittest.expectedFailure
-    # FIXME (MB) check 306 and see what behaviour timlinux wants
     def test_issue306(self):
-        """Issue306: CANVAS doesnt add generate layers in tests
+        """Issue306: CANVAS doesnt add generated layers in tests
         See https://github.com/AIFDR/inasafe/issues/306"""
 
         result, message = setup_scenario(
@@ -755,11 +763,12 @@ class TestDock(TestCase):
             function='HKVtest',
             function_id='HKVtest')
         self.assertTrue(result, message)
-
+        LOGGER.info("Canvas list before:\n%s" % canvas_list())
         # Enable on-the-fly reprojection
         set_canvas_crs(GOOGLECRS, True)
         set_jakarta_google_extent()
         before_count = len(CANVAS.layers())
+        #print 'Before count %s' % before_count
 
         # Press RUN
         DOCK.accept()
@@ -769,6 +778,7 @@ class TestDock(TestCase):
         LOGGER.info("Canvas list after:\n%s" % canvas_list())
         message = ('Layer was not added to canvas (%s before, %s after)' % (
             before_count, after_count))
+        #print 'After count %s' % after_count
         self.assertTrue(before_count == after_count - 1, message)
 
     def test_issue45(self):
@@ -1344,7 +1354,7 @@ Click for Diagnostic Information:
         scenario_file = unique_filename(
             prefix='scenarioTest', suffix='.txt', dir=temp_dir('test'))
         DOCK.save_current_scenario(scenario_file_path=scenario_file)
-        with open(scenario_file, 'rt') as f:
+        with open(scenario_file) as f:
             data = f.readlines()
         title = data[0][:-1]
         exposure = data[1][:-1]

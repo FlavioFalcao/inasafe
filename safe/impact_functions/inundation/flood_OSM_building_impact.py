@@ -30,7 +30,6 @@ class FloodBuildingImpactFunction(FunctionProvider):
     # Function documentation
     target_field = 'INUNDATED'
     title = tr('Be flooded')
-    function_id = 'Flood Building Impact Function'
     synopsis = tr(
         'To assess the impacts of (flood or tsunami) inundation on building '
         'footprints originating from OpenStreetMap (OSM).')
@@ -93,13 +92,13 @@ class FloodBuildingImpactFunction(FunctionProvider):
                'Expected thresholds to be a float. Got %s' % str(threshold))
 
         # Extract data
-        H = get_hazard_layer(layers)    # Depth
-        E = get_exposure_layer(layers)  # Building locations
-        impact_keywords.set_provenance_layer(H, 'impact_layer')
-        impact_keywords.set_provenance_layer(E, 'exposure_layer')
+        my_hazard = get_hazard_layer(layers)    # Depth
+        my_exposure = get_exposure_layer(layers)  # Building locations
+        impact_keywords.set_provenance_layer(my_hazard, 'impact_layer')
+        impact_keywords.set_provenance_layer(my_exposure, 'exposure_layer')
 
         # Determine attribute name for hazard levels
-        if H.is_raster:
+        if my_hazard.is_raster:
             mode = 'grid'
             hazard_attribute = 'depth'
         else:
@@ -108,7 +107,7 @@ class FloodBuildingImpactFunction(FunctionProvider):
 
         # Interpolate hazard level to building locations
         I = assign_hazard_values_to_exposure_data(
-            H, E, attribute_name=hazard_attribute)
+            my_hazard, my_exposure, attribute_name=hazard_attribute)
 
         # Extract relevant exposure data
         attribute_names = I.get_attribute_names()
@@ -263,6 +262,9 @@ class FloodBuildingImpactFunction(FunctionProvider):
                              'target_field': self.target_field,
                              'map_title': map_title,
                              'legend_units': legend_units,
-                             'legend_title': legend_title},
+                             'legend_title': legend_title,
+                             # NB phase these out with keywords
+                             'buildings_total': N,
+                             'buildings_affected': count},
                    style_info=style_info)
         return V

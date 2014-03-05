@@ -31,7 +31,7 @@
     <script type="text/javascript" src="_static/jQuery.equalHeights.js"></script>
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="top" title="dokumentasi InaSAFE Documentation 1.2.0" href="index.html" />
-    <link rel="next" title="Mendownload OpenStreetMap" href="openstreetmap_downloader.html" />
+    <link rel="next" title="OpenStreetMap Downloader" href="openstreetmap_downloader.html" />
     <link rel="prev" title="Batch Runner" href="batch_runner.html" />
 
 <style>
@@ -82,6 +82,23 @@
 <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
 
+<!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(["setDoNotTrack", true]);
+  _paq.push(["trackPageView"]);
+  _paq.push(["enableLinkTracking"]);
+
+  (function() {
+    var u=(("https:" == document.location.protocol) ? "https" : "http") + "://piwik.hotosm.org/";
+    _paq.push(["setTrackerUrl", u+"piwik.php"]);
+    _paq.push(["setSiteId", "2"]);
+    var d=document, g=d.createElement("script"), s=d.getElementsByTagName("script")[0]; g.type="text/javascript";
+    g.defer=true; g.async=true; g.src=u+"piwik.js"; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Piwik Code -->
+
 
 <link rel="shortcut icon" href="_static/img/favicon.ico">
 <link rel="apple-touch-icon-precomposed" sizes="144x144"
@@ -95,6 +112,7 @@
 
   </head>
   <body>
+
     
     <div class="navbar navbar-inverse navbar-fixed-top">
         <div class="navbar-inner">
@@ -132,7 +150,7 @@
                 <li class="right"
                  >
                 <a href="openstreetmap_downloader.html"
-                   title="Mendownload OpenStreetMap"
+                   title="OpenStreetMap Downloader"
                    style="z-index:;"
                 accesskey="N">berikut</a>
                 </li>
@@ -166,23 +184,16 @@
                 
   <div class="section" id="save-scenario">
 <span id="id1"></span><h1>Simpan Skenario<a class="headerlink" href="#save-scenario" title="Link permanent untuk headline ini">¶</a></h1>
-<p>The Save current scenario tool lets you save scenarios
-(<em class="xref std std-ref">tb_save_scenario</em>) and batch run them again in the batch runner
-tool (<a class="reference internal" href="batch_runner.html#batch-runner"><em>Batch Runner</em></a>) in one go:</p>
+<p>Alat penyimpan skenario ini memungkinkan Anda menyimpan skenario (<em class="xref std std-ref">tb_save_scenario</em>) dan melakukan <em>batch run</em> lagi dalam alat <em>batch runner</em> (<a class="reference internal" href="batch_runner.html#batch-runner"><em>Batch Runner</em></a>) dalam satu kali jalan:</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/save_scenario.png"><img alt="Save current scenario" src="_images/save_scenario.png" style="width: 423.0px; height: 316.5px;" /></a>
+<a class="reference internal image-reference" href="_images/save_scenario.png"><img alt="Save current scenario" src="_images/save_scenario.png" style="width: 600.0px; height: 360.0px;" /></a>
 <p class="caption">Simpan skenario saat ini</p>
 </div>
-<p>This is the tool you need to prepare/save scenarios for the
-<em class="xref std std-ref">tb_batch_runner</em> Tool. It lets you save the current visible scenario
-in QGIS to a <tt class="file docutils literal"><span class="pre">.txt</span></tt> file. Once saved you can reopen this file as a
-scenario again in Batch runner and recalculate it.</p>
+<p>Ini adalah alat yang Anda butuhkan untuk menyiapkan/menyimpan skenario untuk alat <em class="xref std std-ref">tb_batch_runner</em>. Ini memungkinkan Anda menyimpan skenario yang terlihat saat ini di QGIS ke dalam berkas <tt class="file docutils literal"><span class="pre">.txt</span></tt>. Setelah Anda simpan, anda dapat membuka kembali file tersebut dalam Batch runner dan menghitung ulang kembali.</p>
 <p>Deskripsi detail yang lebih jelas mengenai batch runner tersedia di <a class="reference internal" href="batch_runner.html#batch-runner"><em>Batch Runner</em></a></p>
 <div class="admonition note">
 <p class="first admonition-title">Catatan</p>
-<p class="last">This tool currently does not store the impact function parameters
-you may have set. Consequently all impact functions will run using their
-default options.</p>
+<p class="last">Sekarang alat ini tidak menyimpan parameter fungsi dampak yang telah anda tetapkan. Oleh karena itu semua fungsi dampak akan dijalankan menggunakan pengaturan bawaan.</p>
 </div>
 </div>
 
@@ -205,7 +216,8 @@ default options.</p>
             This document is licensed under a
             <a rel="license" href="http://creativecommons.org/licenses/by/3.0/au/deed.en_GB">Creative Commons Attribution 3.0 Australia License.</a><br>
             <a href="http://creativecommons.org/licenses/by/3.0/au/deed.en_GB"><b>CCByA</b></a>,
-            Copyright 2013, BNPB/Australian Government/World Bank.
+            Copyright 2014, Indonesian Government-BNPB, Australian
+            Government-AIFDR and the World Bank-GFDRR.
         </div>
     </div>
 

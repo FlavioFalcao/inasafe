@@ -82,6 +82,23 @@
 <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
 
+<!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(["setDoNotTrack", true]);
+  _paq.push(["trackPageView"]);
+  _paq.push(["enableLinkTracking"]);
+
+  (function() {
+    var u=(("https:" == document.location.protocol) ? "https" : "http") + "://piwik.hotosm.org/";
+    _paq.push(["setTrackerUrl", u+"piwik.php"]);
+    _paq.push(["setSiteId", "2"]);
+    var d=document, g=d.createElement("script"), s=d.getElementsByTagName("script")[0]; g.type="text/javascript";
+    g.defer=true; g.async=true; g.src=u+"piwik.js"; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Piwik Code -->
+
 
 <link rel="shortcut icon" href="_static/img/favicon.ico">
 <link rel="apple-touch-icon-precomposed" sizes="144x144"
@@ -95,6 +112,7 @@
 
   </head>
   <body>
+
     
     <div class="navbar navbar-inverse navbar-fixed-top">
         <div class="navbar-inner">
@@ -185,13 +203,13 @@
 <p class="last">Di dalam versi InaSAFE sekarang, panduan ini tidak dapat disesuaikan oleh pengguna. Untuk versi selanjutnya kita akan menyediakan fasilitas ini.</p>
 </div>
 <p>Dalam penggunaan alat ini, pertama anda harus mengambil layer poligon di QGIS yang memiliki area ( contoh area administrasi) dengan sebuah atribut yang memiliki jumlah pengungsi di setiap area.</p>
-<p>Ketika layer sudah dimuat, klik pada :guilabel: alat <cite>Kebutuhan Minimum</cite> pada toolbar:</p>
+<p>Ketika layer sudah dimuat, klik pada alat <em class="guilabel">Kebutuhan Minimum</em> pada toolbar:</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/minimum_needs_tool.png"><img alt="Minimum Needs Tool" src="_images/minimum_needs_tool.png" style="width: 407.25px; height: 332.25px;" /></a>
+<a class="reference internal image-reference" href="_images/minimum_needs_tool.png"><img alt="Minimum Needs Tool" src="_images/minimum_needs_tool.png" style="width: 416.25px; height: 356.25px;" /></a>
 <p class="caption">Alat kebutuhan minimum</p>
 </div>
 <p>Pada dialog yang muncul, pilih layer QGIS yang memiliki batas administrasi dan lalu pilih atribut pada layer yang memiliki jumlah pengungsi.</p>
-<p>Ketika anda siap, tekan :guilabel: tombol <cite>OK</cite> pada dialog.</p>
+<p>Ketika anda siap, tekan tombol <em class="guilabel">OK</em> pada dialog.</p>
 <p>Setelah analisis selesai, kata kunci baru akan terkait dengan layer yang mengindikasikan kebutuhan sesuai dengan formula yang didefinisikan di atas.</p>
 </div>
 
@@ -214,7 +232,8 @@
             This document is licensed under a
             <a rel="license" href="http://creativecommons.org/licenses/by/3.0/au/deed.en_GB">Creative Commons Attribution 3.0 Australia License.</a><br>
             <a href="http://creativecommons.org/licenses/by/3.0/au/deed.en_GB"><b>CCByA</b></a>,
-            Copyright 2013, BNPB/Australian Government/World Bank.
+            Copyright 2014, Indonesian Government-BNPB, Australian
+            Government-AIFDR and the World Bank-GFDRR.
         </div>
     </div>
 

@@ -24,7 +24,7 @@ ALL := $(NONGUI) $(GUI)  # Would like to turn this into comma separated list usi
 
 # LOCALES = space delimited list of iso codes to generate po files for
 # Please dont remove en here
-LOCALES = en id af
+LOCALES = en id fr
 
 default: compile
 
@@ -178,7 +178,7 @@ testdata:
 	@echo "Updating inasafe_data - public test and demo data repository"
 	@echo "Update the hash to check out a specific data version        "
 	@echo "------------------------------------------------------------"
-	@scripts/update-test-data.sh 6c69c0dd8f803cfc579020b20849da9adfc703a2 2>&1 | tee tmp_warnings.txt; [ $${PIPESTATUS[0]} -eq 0 ] && rm -f tmp_warnings.txt || echo "Stored update warnings in tmp_warnings.txt";
+	@scripts/update-test-data.sh 7133043e62de5c8d114020867d10507e92632e79 2>&1 | tee tmp_warnings.txt; [ $${PIPESTATUS[0]} -eq 0 ] && rm -f tmp_warnings.txt || echo "Stored update warnings in tmp_warnings.txt";
 
 #check and show if there was an error retrieving the test data
 testdata_errorcheck:
@@ -300,7 +300,7 @@ jenkins-test: testdata clean
 	@echo "Regression Test Suite for Jenkins"
 	@echo " against QGIS 2.x"
 	@echo "----------------------------------"
-	@-export PYTHONPATH=`pwd`:$(PYTHONPATH); nosetests -v --with-id --with-xcoverage --with-xunit --verbose --cover-package=safe,safe_qgis safe safe_qgis || :
+	@-export PYTHONPATH=`pwd`:$(PYTHONPATH); nosetests --cover-package=safe,safe_qgis --with-id --with-xcoverage --with-xunit --verbose --cover-package=safe,safe_qgis safe safe_qgis || :
 
 jenkins-qgis2-test: testdata clean
 	@echo

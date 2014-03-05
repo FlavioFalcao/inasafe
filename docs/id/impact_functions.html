@@ -82,6 +82,23 @@
 <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
 
+<!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(["setDoNotTrack", true]);
+  _paq.push(["trackPageView"]);
+  _paq.push(["enableLinkTracking"]);
+
+  (function() {
+    var u=(("https:" == document.location.protocol) ? "https" : "http") + "://piwik.hotosm.org/";
+    _paq.push(["setTrackerUrl", u+"piwik.php"]);
+    _paq.push(["setSiteId", "2"]);
+    var d=document, g=d.createElement("script"), s=d.getElementsByTagName("script")[0]; g.type="text/javascript";
+    g.defer=true; g.async=true; g.src=u+"piwik.js"; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Piwik Code -->
+
 
 <link rel="shortcut icon" href="_static/img/favicon.ico">
 <link rel="apple-touch-icon-precomposed" sizes="144x144"
@@ -95,6 +112,7 @@
 
   </head>
   <body>
+
     
     <div class="navbar navbar-inverse navbar-fixed-top">
         <div class="navbar-inner">
@@ -169,7 +187,7 @@
 <p>Dokumen ini menjelaskan tujuan dari fungsi-fungsi dampak dan membuat daftar fungsi dampak berbeda yang tersedia beserta setiap kebutuhannya yang akan digunakan secara efektif. Lihat <em class="xref std std-ref">writing_impact_functions</em> untuk informasi lebih lanjut mengenai fungsi dampak yang baru.</p>
 <div class="section" id="what-is-an-impact-function">
 <h2>Apa itu fungsi dampak?<a class="headerlink" href="#what-is-an-impact-function" title="Link permanent untuk headline ini">¶</a></h2>
-<p>Fungsi dampak adalah program perangkat lunak yang menghitung sejumlah risiko yang mungkin terjadi berdasarkan input yang diberikan. Penilaian risiko ini biasanya akan memiliki komponen <em>spasial</em> (misalnya layer SIG yang dapat dimasukkan ke dalam peta) dan komponen <em>non-spasial</em> (misalnya daftar yang mungkin ingin Anda pertimbangkan untuk dimasukkan, atau daftar perkiraan unsur-unsur yang dapat mengurangani risiko dampak bencana seperti berapa banyak karung beras yang dibutuhkan untuk persediaan dalam suatu bencana).</p>
+<p>Fungsi dampak adalah program perangkat lunak yang menghitung penilaian risiko diberikan sejumlah masukan. Penilaian risiko ini biasanya akan memiliki komponen <em>spasial</em> (misalnya layer SIG yang dapat dimasukkan ke dalam peta) dan komponen <em>non-spasial</em> (misalnya daftar yang Anda lakukan mungkin ingin dipertimbangkan untuk dimasukkan, atau daftar perkiraan unsur-unsur yang dapat mengurangi risiko bencana seperti berapa banyak karung beras untuk persediaan dalam suatu bencana).</p>
 </div>
 <div class="section" id="selecting-an-impact-function">
 <h2>Memilih fungsi dampak<a class="headerlink" href="#selecting-an-impact-function" title="Link permanent untuk headline ini">¶</a></h2>
@@ -179,12 +197,12 @@
 <h2>Menjelajahi fungsi dampak<a class="headerlink" href="#exploring-impact-functions" title="Link permanent untuk headline ini">¶</a></h2>
 <p>Anda dapat menggunakan tabel fungsi dampak untuk mengeksplorasi seluruh kemungkinan fungsi dampak yang dapat digunakan. Semuanya telah terdaftar pada sebuah tabel dengan sebuah seri daftar pilihan (kotak kombo) di atas yang dapat digunakan untuk menyaring fungsi berdasarkan pada kriteria sebagaimana yang telah diilustrasikan di bawah ini.</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/impact_function_table_unfiltered.png"><img alt="unfiltered impact function table" src="_images/impact_function_table_unfiltered.png" style="width: 767.25px; height: 311.25px;" /></a>
+<a class="reference internal image-reference" href="_images/impact_function_table_unfiltered.png"><img alt="unfiltered impact function table" src="_images/impact_function_table_unfiltered.png" style="width: 627.75px; height: 303.0px;" /></a>
 <p class="caption">tabel fungsi dampak tidak disaring</p>
 </div>
 <p>Ketika mengaplikasikan sebuah set penyaringan, daftar fungsi yang tersedia yang memenuhi kriteria akan diperbaharui sebagaimana yang ditunjukan di bawah ini.</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/impact_function_table_filtered.png"><img alt="filtered impact function table" src="_images/impact_function_table_filtered.png" style="width: 767.25px; height: 311.25px;" /></a>
+<a class="reference internal image-reference" href="_images/impact_function_table_filtered.png"><img alt="filtered impact function table" src="_images/impact_function_table_filtered.png" style="width: 627.75px; height: 303.0px;" /></a>
 <p class="caption">Tabel fungsi dampak yang sudah disaring</p>
 </div>
 <p>Tabel fungsi dampak sederhananya adalah sebuah penjelajah untuk membantu Anda agar memahami fungsi-fungsi yang tersedia. Untuk penggunaan fungsi sebenarnya Anda memerlukan layer-layer yang tersedia (termuat dalam QGIS) dengan kata kunci yang sesuai untuk target fungsi Anda.</p>
@@ -224,7 +242,8 @@
             This document is licensed under a
             <a rel="license" href="http://creativecommons.org/licenses/by/3.0/au/deed.en_GB">Creative Commons Attribution 3.0 Australia License.</a><br>
             <a href="http://creativecommons.org/licenses/by/3.0/au/deed.en_GB"><b>CCByA</b></a>,
-            Copyright 2013, BNPB/Australian Government/World Bank.
+            Copyright 2014, Indonesian Government-BNPB, Australian
+            Government-AIFDR and the World Bank-GFDRR.
         </div>
     </div>
 

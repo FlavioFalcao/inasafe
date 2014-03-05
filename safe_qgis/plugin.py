@@ -20,6 +20,7 @@ import sys
 import os
 import logging
 from safe_qgis.utilities import custom_logging
+from safe_qgis.utilities.keyword_io import KeywordIO
 
 LOGGER = logging.getLogger('InaSAFE')
 
@@ -29,15 +30,17 @@ from PyQt4.QtCore import (
     QLocale,
     QTranslator,
     QCoreApplication,
-    Qt,
-    QSettings)
+    Qt)
 from PyQt4.QtGui import QAction, QIcon, QApplication, QMessageBox
 try:
     # When upgrading, using the plugin manager, you may get an error when
     # doing the following import, so we wrap it in a try except
     # block and then display a friendly message to restart QGIS
     # noinspection PyUnresolvedReferences
-    from safe_qgis.exceptions import TranslationLoadError
+    from safe_qgis.exceptions import (
+        TranslationLoadError,
+        UnsupportedProviderError,
+        NoKeywordsFoundError)
 except ImportError:
     # Note we use translate directly but the string may still not translate
     # at this early stage since the i18n setup routines have not been called
@@ -83,12 +86,10 @@ class Plugin:
         self.key_action = None
         self.action_function_browser = None
         self.action_options = None
-        self.action_reset_dock = None
         self.action_keywords_dialog = None
         self.translator = None
         self.toolbar = None
         self.actions = []  # list of all QActions we create for InaSAFE
-        self.setup_i18n()
         self.action_dock = None
         #print self.tr('InaSAFE')
         custom_logging.setup_logger()
@@ -96,52 +97,35 @@ class Plugin:
         self.iface.currentLayerChanged.connect(self.layer_changed)
 
     #noinspection PyArgumentList
-    def setup_i18n(self, preferred_locale=None):
-        """Setup internationalisation for the plugin.
+    def change_i18n(self, new_locale):
+        """Change internationalisation for the plugin.
 
-        See if QGIS wants to override the system locale
+        Override the system locale
         and then see if we can get a valid translation file
         for whatever locale is effectively being used.
 
-        :param preferred_locale: If set will override any other way of
-            determining locale.
-        :type preferred_locale: str, None
+        :param new_locale: the new locale i.e. 'id', 'af', etc.
+        :type new_locale: str
         :raises: TranslationLoadException
         """
-        override_flag = QSettings().value(
-            'locale/overrideFlag', False, type=bool)
 
-        if preferred_locale is not None:
-            locale_name = preferred_locale
-        elif override_flag:
-            locale_name = QSettings().value('locale/userLocale', '', type=str)
-        else:
-            locale_name = QLocale.system().name()
-            # NOTES: we split the locale name because we need the first two
-            # character i.e. 'id', 'af, etc
-            locale_name = str(locale_name).split('_')[0]
+        os.environ['LANG'] = str(new_locale)
 
-        # Also set the system locale to the user overridden local
-        # so that the inasafe library functions gettext will work
-        # .. see:: :py:func:`common.utilities`
-        os.environ['LANG'] = str(locale_name)
-
-        LOGGER.debug('%s %s %s %s' % (
-            preferred_locale,
-            override_flag,
+        LOGGER.debug('%s %s %s' % (
+            new_locale,
             QLocale.system().name(),
             os.environ['LANG']))
 
         root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         translation_path = os.path.join(
             root, 'safe_qgis', 'i18n',
-            'inasafe_' + str(locale_name) + '.qm')
+            'inasafe_' + str(new_locale) + '.qm')
 
         if os.path.exists(translation_path):
             self.translator = QTranslator()
             result = self.translator.load(translation_path)
             if not result:
-                message = 'Failed to load translation for %s' % locale_name
+                message = 'Failed to load translation for %s' % new_locale
                 raise TranslationLoadError(message)
             # noinspection PyTypeChecker,PyCallByClass
             QCoreApplication.installTranslator(self.translator)
@@ -232,20 +216,6 @@ class Plugin:
             self.show_keywords_editor)
 
         self.add_action(self.action_keywords_dialog)
-
-        #--------------------------------------
-        # Create action for reset icon
-        #--------------------------------------
-        self.action_reset_dock = QAction(
-            QIcon(':/plugins/inasafe/reset-dock.svg'),
-            self.tr('Reset Dock'), self.iface.mainWindow())
-        self.action_reset_dock.setStatusTip(self.tr(
-            'Reset the InaSAFE Dock'))
-        self.action_reset_dock.setWhatsThis(self.tr(
-            'Reset the InaSAFE Dock'))
-        self.action_reset_dock.triggered.connect(self.reset_dock)
-
-        self.add_action(self.action_reset_dock)
 
         #--------------------------------------
         # Create action for options dialog
@@ -500,8 +470,29 @@ class Plugin:
         # import here only so that it is AFTER i18n set up
         from safe_qgis.tools.keywords_dialog import KeywordsDialog
 
+        # Next block is a fix for #776
         if self.iface.activeLayer() is None:
             return
+
+        try:
+            keyword_io = KeywordIO()
+            keyword_io.read_keywords(self.iface.activeLayer())
+        except UnsupportedProviderError:
+            # noinspection PyUnresolvedReferences,PyCallByClass
+            QMessageBox.warning(
+                None,
+                self.tr('Unsupported layer type'),
+                self.tr(
+                    'The layer you have selected cannot be used for '
+                    'analysis because its data type is unsupported.'))
+            return
+        # End of fix for #776
+        # Fix for #793
+        except NoKeywordsFoundError:
+            # we will create them from scratch in the dialog
+            pass
+        # End of fix for #793
+
         dialog = KeywordsDialog(
             self.iface.mainWindow(),
             self.iface,
@@ -544,10 +535,6 @@ class Plugin:
     def save_scenario(self):
         """Save current scenario to text file,"""
         self.dock_widget.save_current_scenario()
-
-    def reset_dock(self):
-        """Reset the dock to its default state."""
-        self.dock_widget.get_layers()
 
     def layer_changed(self, layer):
         """Enable or disable keywords editor icon when active layer changes.

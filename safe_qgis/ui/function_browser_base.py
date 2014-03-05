@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'function_browser_base.ui'
 #
-# Created: Tue Jul  2 08:41:17 2013
-#      by: PyQt4 UI code generator 4.10
+# Created: Wed Feb 26 09:49:05 2014
+#      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_FunctionBrowserBase(object):
     def setupUi(self, FunctionBrowserBase):
         FunctionBrowserBase.setObjectName(_fromUtf8("FunctionBrowserBase"))
-        FunctionBrowserBase.resize(821, 733)
+        FunctionBrowserBase.resize(821, 600)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/plugins/inasafe/icon.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         FunctionBrowserBase.setWindowIcon(icon)

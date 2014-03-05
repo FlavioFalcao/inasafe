@@ -1,3 +1,4 @@
+# coding=utf-8
 """Common functionality used by regression tests
 """
 
@@ -5,15 +6,10 @@ import numpy
 import os
 import sys
 import logging
-from PyQt4 import QtGui, QtCore
 from numpy.testing import Tester
 
-from qgis.core import QgsApplication
-from qgis.gui import QgsMapCanvas
-
-from numerics import axes_to_points
+from safe.common.numerics import axes_to_points
 from safe.common.version import get_version
-from safe.common.qgis_interface import QgisInterface
 
 
 LOGGER = logging.getLogger('InaSAFE')
@@ -675,14 +671,24 @@ test_polygon = numpy.array([[122.229086, -8.624406],
                             [122.229086, -8.624406]])
 
 
+# noinspection PyUnresolvedReferences
 def get_qgis_app():
     """ Start one QGIS application to test against.
 
-    :returns: Handle to QGIS app
-    :rtype: QGIS application instance
+    :returns: Handle to QGIS app, canvas, iface and parent. If there are any
+        errors the tuple members will be returned as None.
+    :rtype: (QgsApplication, CANVAS, IFACE, PARENT)
 
-    If QGIS is already running the handle to that app will be returned
+    If QGIS is already running the handle to that app will be returned.
     """
+
+    try:
+        from PyQt4 import QtGui, QtCore
+        from qgis.core import QgsApplication
+        from qgis.gui import QgsMapCanvas
+        from safe.common.qgis_interface import QgisInterface
+    except ImportError:
+        return None, None, None, None
 
     global QGIS_APP  # pylint: disable=W0603
 
@@ -690,15 +696,7 @@ def get_qgis_app():
         gui_flag = True  # All test will run qgis in gui mode
         #noinspection PyPep8Naming
         QGIS_APP = QgsApplication(sys.argv, gui_flag)
-
-        # Note: This block is not needed for  QGIS > 1.8 which will
-        # automatically check the QGIS_PREFIX_PATH var so it is here
-        # for backwards compatibility only
-        if 'QGIS_PREFIX_PATH' in os.environ:
-            path = os.environ['QGIS_PREFIX_PATH']
-            use_default_path_flag = True
-            QGIS_APP.setPrefixPath(path, use_default_path_flag)
-
+        # Make sure QGIS_PREFIX_PATH is set in your env if needed!
         QGIS_APP.initQgis()
         s = QGIS_APP.showSettings()
         LOGGER.debug(s)

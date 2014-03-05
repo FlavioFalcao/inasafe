@@ -59,7 +59,6 @@ class FloodEvacuationFunctionVectorHazard(FunctionProvider):
     """
 
     title = tr('Need evacuation')
-    function_id = 'FP2'  # Flood Population 2
     # Function documentation
     synopsis = tr(
         'To assess the impacts of (flood or tsunami) inundation in vector '
@@ -161,8 +160,11 @@ class FloodEvacuationFunctionVectorHazard(FunctionProvider):
             try:
                 cat = attr[category_title]
             except KeyError:
-                cat = attr['FLOODPRONE']
-            categories[cat] = 0
+                try:
+                    cat = attr['FLOODPRONE']
+                    categories[cat] = 0
+                except KeyError:
+                    pass
 
         # Count affected population per polygon, per category and total
         affected_population = 0
@@ -191,14 +193,16 @@ class FloodEvacuationFunctionVectorHazard(FunctionProvider):
                     x = res
                 affected = x
             else:
+                #assume that every polygon is affected (see #816)
+                affected = True
                 # there is no flood related attribute
-                msg = ('No flood related attribute found in %s. '
-                       'I was looking fore either "Flooded", "FLOODPRONE" '
-                       'or "Affected". The latter should have been '
-                       'automatically set by call to '
-                       'assign_hazard_values_to_exposure_data(). '
-                       'Sorry I can\'t help more.')
-                raise Exception(msg)
+                #msg = ('No flood related attribute found in %s. '
+                #       'I was looking for either "Flooded", "FLOODPRONE" '
+                #       'or "Affected". The latter should have been '
+                #       'automatically set by call to '
+                #       'assign_hazard_values_to_exposure_data(). '
+                #       'Sorry I can\'t help more.')
+                #raise Exception(msg)
 
             if affected:
                 # Get population at this location
@@ -209,11 +213,13 @@ class FloodEvacuationFunctionVectorHazard(FunctionProvider):
                 new_attributes[poly_id][self.target_field] += pop
 
                 # Update population count for each category
-                try:
-                    cat = new_attributes[poly_id][category_title]
-                except KeyError:
-                    cat = new_attributes[poly_id][deprecated_category_title]
-                categories[cat] += pop
+                if len(categories) > 0:
+                    try:
+                        cat = new_attributes[poly_id][category_title]
+                    except KeyError:
+                        cat = new_attributes[poly_id][
+                            deprecated_category_title]
+                    categories[cat] += pop
 
                 # Update total
                 affected_population += pop
@@ -247,8 +253,9 @@ class FloodEvacuationFunctionVectorHazard(FunctionProvider):
 
         # Create style
         # Define classes for legend for flooded population counts
-        colours = ['#FFFFFF', '#38A800', '#79C900', '#CEED00',
+        colours = ['#08FFDA', '#38A800', '#79C900', '#CEED00',
                    '#FFCC00', '#FF6600', '#FF0000', '#7A0000']
+
         population_counts = [x['population'] for x in new_attributes]
         classes = create_classes(population_counts, len(colours))
         interval_classes = humanize_class(classes)
@@ -259,7 +266,7 @@ class FloodEvacuationFunctionVectorHazard(FunctionProvider):
             style_class = dict()
             style_class['label'] = create_label(interval_classes[i])
             if i == 0:
-                transparency = 100
+                transparency = 0
                 style_class['min'] = 0
             else:
                 transparency = 0
@@ -291,6 +298,8 @@ class FloodEvacuationFunctionVectorHazard(FunctionProvider):
                              'map_title': map_title,
                              'legend_notes': legend_notes,
                              'legend_units': legend_units,
-                             'legend_title': legend_title},
+                             'legend_title': legend_title,
+                             'affected_population': affected_population,
+                             'total_population': total},
                    style_info=style_info)
         return V
