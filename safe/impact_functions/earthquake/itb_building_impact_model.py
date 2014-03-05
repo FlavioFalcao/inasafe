@@ -30,6 +30,7 @@ from safe.storage.vector import Vector
 from safe.common.numerics import log_normal_cdf
 from safe.common.utilities import ugettext as tr
 from safe.common.utilities import verify
+from safe.keywords.keywords_management import ImpactKeywords, ImpactBreakdown
 from safe.engine.interpolation import assign_hazard_values_to_exposure_data
 
 path = os.path.dirname(__file__)
@@ -83,6 +84,16 @@ class ITBEarthquakeBuildingDamageFunction(FunctionProvider):
     """
 
     title = tr('Be damaged depending on building type')
+    # function_id = 'ITB Earthquake Building Damage Function'
+    # synopsis = tr(
+    #     'To assess the impacts of earthquake on buildings, based on shake '
+    #     'levels')
+    # detailed_description = '',
+    # hazard_input = tr(
+    #     'A hazard raster layer where each cell represents sake.')
+    # exposure_input = tr(
+    #     'Vector polygon layer where each polygon '
+    #     'represents the footprint of a building.')
 
     def run(self, layers):
         """Risk plugin for Padang building survey
@@ -90,6 +101,7 @@ class ITBEarthquakeBuildingDamageFunction(FunctionProvider):
         :type layers: list
         """
 
+        print "In ITB"
         # Extract data
         H = get_hazard_layer(layers)    # Ground shaking
         E = get_exposure_layer(layers)  # Building locations

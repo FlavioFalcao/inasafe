@@ -10,6 +10,7 @@ __copyright__ = ('Copyright 2012, Australia Indonesia Facility for '
                  'Disaster Reduction')
 from exceptions import ValueError
 import json
+from collections import OrderedDict
 
 from safe.common.utilities import ugettext as tr
 
@@ -21,6 +22,86 @@ def current_version():
     :rtype: int
     """
     return 1
+
+
+class ImpactBreakdown(object):
+    """A general impact breakdown.
+    """
+    def __init__(
+            self, categories, attributes, category_label=None):
+        """A category type breakdown of affected population/buildings or other.
+
+        Creating a 'table' with columns defined by categories and rows
+        defined by attributes. The implementation makes use of ordered dicts
+        in both these cases
+
+        :param categories: The categories that the breakdown consists of.
+        :type categories: list
+
+        :param attributes: The attributes in a category
+        :type attributes: list
+
+        :param category_label: The title that should be used for the category
+        """
+        self.category_label = category_label
+        self.categories = categories
+        self.attributes = attributes
+        self.data = OrderedDict()
+        for category in categories:
+            self.data[category] = OrderedDict(
+                zip(attributes, [None] * len(attributes)))
+
+    def __getitem__(self, keys):
+        """Get a specific element based on their category and attribute
+
+        Make the object behave like a dict
+
+        :param keys: The category and attribute of the breakdown
+        :type keys: list
+
+        :return: returns the value of the category attribute
+        """
+        category, attribute = keys
+        return self.data[category][attribute]
+
+    def __setitem__(self, keys, value):
+        """Set a specific element based on their category and attribute
+
+        Make the object behave like a dict
+
+        :param keys: The category and attribute of the breakdown
+        :type keys: list
+        """
+        category, attribute = keys
+        self.data[category][attribute] = value
+
+    def get_categories(self):
+        """Get the categories by name of this impact breakdown
+
+        :return: The categories that this impact has.
+        :rtype: list
+        """
+        return self.categories
+
+    def get_attributes(self):
+        """Get the attributes by name of this impact breakdown
+
+        :return: The attributes that this impact has.
+        :rtype: list
+        """
+        return self.attributes
+
+    def serialize(self):
+        """Convert this object into a serialized version.
+
+        :return: The content of this object.
+        :rtype: OrderedDict
+        """
+        return OrderedDict([
+            ('category_label', self.category_label),
+            ('data', self.data),
+            ('categories', self.categories),
+            ('attributes', self.attributes)])
 
 
 class KeywordsLayer(object):
@@ -62,8 +143,8 @@ class KeywordsLayerImpact(KeywordsLayer):
         self.function_details = layer_data.get("function_details", None)
         self.impact_assessment = layer_data.get("impact_assessment", None)
         self.minimum_needs = layer_data.get("minimum_needs", None)
-        self.buildings_breakdown = layer_data.get("buildings_breakdown", None)
         self.post_processing = layer_data.get("post_processing", None)
+        self.impact_breakdown = layer_data.get("impact_breakdown", None)
         self.layer_type = "impact"
 
     def serialize(self):
@@ -72,17 +153,18 @@ class KeywordsLayerImpact(KeywordsLayer):
         :return: Content of object.
         :rtype: dict
         """
-        serialized_data = {}
+        serialized_data = OrderedDict()
         if self.function_details:
             serialized_data['function_details'] = self.function_details
         if self.impact_assessment:
             serialized_data['impact_assessment'] = self.impact_assessment
         if self.minimum_needs:
             serialized_data['minimum_needs'] = self.minimum_needs
-        if self.buildings_breakdown:
-            serialized_data['buildings_breakdown'] = self.buildings_breakdown
         if self.post_processing:
             serialized_data['post_processing'] = self.post_processing
+        if self.impact_breakdown:
+            serialized_data['impact_breakdown'] = (
+                self.impact_breakdown.serialize())
         return serialized_data
 
     def set_impact_assesment(self, exposure_subcategory, hazard_subcategory):
@@ -101,59 +183,6 @@ class KeywordsLayerImpact(KeywordsLayer):
         if hazard_subcategory == "flood":
             self.impact_assessment["hazard_units"] = "wet/dry"
 
-    def set_impact_assesment_buildings(
-            self, hazard_subcategory,
-            buildings_total, buildings_affected):
-        """Set impact assessment details for building impact.
-
-        :param hazard_subcategory: The type of hazard.
-        :type hazard_subcategory: str
-
-        :param buildings_total: Total building types.
-        :type buildings_total: dict
-
-        :param buildings_affected: Number of affected buildings by type. This
-         is a dict of dicts
-        :type buildings_affected: dict
-        """
-        self.set_impact_assesment(
-            'buildings', hazard_subcategory)
-        self.impact_assessment['total_buildings'] = sum(
-            buildings_total.values())
-        for key in buildings_affected:
-            self.impact_assessment[key] = sum(
-                buildings_affected[key].values())
-
-    def set_impact_assesment_population(
-            self, hazard_subcategory,
-            affected_population, evacuated_population, total_population,
-            additional=None):
-        """Set impact assessment details for population impact.
-
-        :param hazard_subcategory: The type of hazard.
-        :type hazard_subcategory: str
-
-        :param affected_population: The number of affected population
-        :type affected_population: int
-
-        :param evacuated_population: The number of evacuated population
-        :type evacuated_population: int
-
-        :param total_population: The total population
-        :type total_population: int
-
-        :param additional: A dictionary of additional assessment data.
-        :type additional: dict, None
-        """
-        self.set_impact_assesment(
-            'population', hazard_subcategory)
-        self.impact_assessment['affected_population'] = affected_population
-        self.impact_assessment['evacuated_population'] = evacuated_population
-        self.impact_assessment['total_population'] = total_population
-        if additional:
-            for key, value in additional.items():
-                self.impact_assessment[key] = value
-
     def set_minimum_needs(self, minimum_needs):
         self.minimum_needs = minimum_needs
 
@@ -171,21 +200,12 @@ class KeywordsLayerImpact(KeywordsLayer):
             if hasattr(impact_function, attr):
                 self.function_details[attr] = getattr(impact_function, attr)
 
-    def set_buildings_breakdown(self, buildings, buildings_breakdown):
-        self.buildings_breakdown = {}
-        for building_type in buildings:
-            building_type = building_type.replace('_', ' ')
-            building_type = tr(building_type)
-            self.buildings_breakdown[building_type] = {
-                "total": buildings[building_type]
-            }
-            for key in buildings_breakdown:
-                self.buildings_breakdown[building_type][key] = (
-                    buildings_breakdown[key][building_type])
-
 
     def set_title(self, title):
         self.title = title
+
+    def set_impact_breakdown(self, impact_breakdown):
+        self.impact_breakdown = impact_breakdown
 
 
 class KeywordsLayerExposure(KeywordsLayer):
@@ -209,7 +229,7 @@ class KeywordsLayerExposure(KeywordsLayer):
         :return: Content of object.
         :rtype: dict
         """
-        serialized_data = {}
+        serialized_data = OrderedDict()
         return serialized_data
 
 
@@ -234,8 +254,10 @@ class KeywordsLayerHazard(KeywordsLayer):
         :return: Content of object.
         :rtype: dict
         """
-        serialized_data = {}
+        serialized_data = OrderedDict()
         return serialized_data
+
+# Aggregation Layer
 
 
 class Keywords(object):
@@ -258,6 +280,7 @@ class Keywords(object):
         self.attribution = data.get('attribution', None)
         self.provenance = data.get('provenance', {})
         self.metrics = data.get('metrics', None)
+        # This is to support sublayers
         for layer_label in ['primary_layer', 'secondary_layer']:
             if layer_label not in data:
                 setattr(self, layer_label, None)
@@ -279,7 +302,8 @@ class Keywords(object):
         :return: Content of object.
         :rtype: dict
         """
-        serialized_data = {'VERSION': self.version}
+        # Oredered Dict
+        serialized_data = OrderedDict(('VERSION', self.version))
         if self.publisher:
             serialized_data['publisher'] = self.publisher
         if self.attribution:
@@ -326,6 +350,16 @@ class Keywords(object):
             'type': 'vector' if layer.is_vector else 'raster'}
         if 'attribution' in layer.keywords:
             self.provenance['attribution'] = layer.keywords['attribution']
+
+    def __getattr__(self, method):
+        """ Hide the primary layer method calls.
+        :param method: This is the name of the method in the primary layer.
+        :return: the method required.
+        """
+        if hasattr(self.primary_layer, method):
+            return getattr(self.primary_layer, method)
+        else:
+            raise AttributeError
 
 
 class ImpactKeywords(Keywords):

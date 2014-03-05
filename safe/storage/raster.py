@@ -282,6 +282,8 @@ class Raster(Layer):
 
         # Write keywords if any
         write_keywords(self.keywords, basename + '.keywords')
+        #write_json_keywords(self.keywords_json, basename + '.json')
+        #write_html
 
     def get_data(self, nan=True, scaling=None, copy=False):
         """Get raster data as numeric array

@@ -393,3 +393,5 @@ class PostprocessorManager(QtCore.QObject):
                 pass
 
             return self._generate_tables(aoi_mode)
+
+    # def get_serial_output(self, aoi_mode):

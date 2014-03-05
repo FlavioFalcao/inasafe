@@ -30,7 +30,7 @@ class FloodBuildingImpactFunction(FunctionProvider):
     # Function documentation
     target_field = 'INUNDATED'
     title = tr('Be flooded')
-    function_id = 'FB1'  # Flood Buildings 1
+    function_id = 'Flood Building Impact Function'
     synopsis = tr(
         'To assess the impacts of (flood or tsunami) inundation on building '
         'footprints originating from OpenStreetMap (OSM).')
@@ -84,9 +84,9 @@ class FloodBuildingImpactFunction(FunctionProvider):
         """
 
         impact_keywords = ImpactKeywords()
-        impact_keywords.primary_layer.set_function_details(self)
-        impact_keywords.primary_layer.set_title(
-            tr('Estimated buildings affected'))
+        impact_keywords.set_function_details(self)
+        impact_keywords.set_title(tr('Estimated buildings affected'))
+
         threshold = self.parameters['threshold [m]']  # Flood threshold [m]
 
         verify(isinstance(threshold, float),
@@ -228,7 +228,7 @@ class FloodBuildingImpactFunction(FunctionProvider):
 
         impact_keywords.primary_layer.set_buildings_breakdown(
             buildings, {'affected_buildings': affected_buildings})
-        impact_keywords.primary_layer.set_impact_assesment_buildings(
+        impact_keywords.primary_layer.set_impact_assessment_buildings(
             'buildings', 'flood', buildings,
             {'affected': affected_buildings})
 

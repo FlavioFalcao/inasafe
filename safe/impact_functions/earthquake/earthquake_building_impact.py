@@ -6,10 +6,9 @@ from safe.impact_functions.core import (
     FunctionProvider, get_hazard_layer, get_exposure_layer, get_question)
 from safe.storage.vector import Vector
 from safe.common.utilities import (ugettext as tr, format_int)
-from safe.common.tables import Table, TableRow
 from safe.engine.interpolation import assign_hazard_values_to_exposure_data
-from safe.keywords.keywords_management import ImpactKeywords
-from safe.keywords.table_formatter import TableFormatter
+from safe.keywords.keywords_management import ImpactKeywords, ImpactBreakdown
+from safe.keywords.table_formatter import TableSelector
 
 import logging
 
@@ -28,7 +27,16 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
     """
 
     target_field = 'Shake_cls'
-    function_id = 'EB1'  # Earthquake Buildings 1
+    function_id = 'Earthquake Building Impact Function'
+    synopsis = tr(
+        'To assess the impacts of earthquake on buildings, based on shake '
+        'levels')
+    detailed_description = '',
+    hazard_input = tr(
+        'A hazard raster layer where each cell represents sake.')
+    exposure_input = tr(
+        'Vector polygon layer where each polygon '
+        'represents the footprint of a building.')
     statistics_type = 'class_count'
     statistics_classes = [0, 1, 2, 3]
     title = tr('Be affected')
@@ -46,9 +54,8 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
         """
 
         impact_keywords = ImpactKeywords()
-        impact_keywords.primary_layer.set_function_details(self)
-        impact_keywords.primary_layer.set_title(
-             tr('Estimated buildings affected'))
+        impact_keywords.set_function_details(self)
+        impact_keywords.set_title(tr('Estimated buildings affected'))
 
         LOGGER.debug('Running earthquake building impact')
 
@@ -72,6 +79,7 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
         my_exposure = get_exposure_layer(layers)  # Building locations
         impact_keywords.set_provenance_layer(my_hazard, 'impact_layer')
         impact_keywords.set_provenance_layer(my_exposure, 'exposure_layer')
+        impact_keywords.set_impact_assesment('buildings', 'earthquake')
 
         question = get_question(my_hazard.get_name(),
                                 my_exposure.get_name(),
@@ -100,6 +108,7 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
         interpolate_size = len(my_interpolate_result)
 
         # Calculate building impact
+        unaffected = 0
         lo = 0
         me = 0
         hi = 0
@@ -116,19 +125,16 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
                 try:
                     area = float(attributes[i]['FLOOR_AREA'])
                 except (ValueError, KeyError):
-                    #print 'Got area', attributes[i]['FLOOR_AREA']
                     area = 0.0
 
                 try:
                     building_value_density = float(attributes[i]['BUILDING_C'])
                 except (ValueError, KeyError):
-                    #print 'Got bld value', attributes[i]['BUILDING_C']
                     building_value_density = 0.0
 
                 try:
                     contents_value_density = float(attributes[i]['CONTENTS_C'])
                 except (ValueError, KeyError):
-                    #print 'Got cont value', attributes[i]['CONTENTS_C']
                     contents_value_density = 0.0
 
                 building_value = building_value_density * area
@@ -148,7 +154,7 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
                 hi += 1
                 cls = 3
             else:
-                # Not reported for less than level t0
+                unaffected += 1
                 cls = 0
 
             attributes[i][self.target_field] = cls
@@ -164,56 +170,39 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
                 building_values[key] = int(building_values[key] / 1000000)
                 contents_values[key] = int(contents_values[key] / 1000000)
 
+        categories = [
+            tr('Unaffected'), class_1['label'], class_2['label'],
+            class_3['label']]
         if is_nexis:
-            # Generate simple impact report for NEXIS type buildings
-            table_body = [question,
-                          TableRow([tr('Hazard Level'),
-                                    tr('Buildings Affected'),
-                                    tr('Buildings value ($M)'),
-                                    tr('Contents value ($M)')],
-                                   header=True),
-                          TableRow([class_1['label'], format_int(lo),
-                                    format_int(building_values[1]),
-                                    format_int(contents_values[1])]),
-                          TableRow([class_2['label'], format_int(me),
-                                    format_int(building_values[2]),
-                                    format_int(contents_values[2])]),
-                          TableRow([class_3['label'], format_int(hi),
-                                    format_int(building_values[3]),
-                                    format_int(contents_values[3])])]
+            attribute_names = [
+                tr('Buildings Affected'), tr('Buildings value ($M)'),
+                tr('Contents value ($M)')]
         else:
-            # Generate simple impact report for unspecific buildings
-            table_body = [question,
-                          TableRow([tr('Hazard Level'),
-                                    tr('Buildings Affected')],
-                          header=True),
-                          TableRow([class_1['label'], format_int(lo)]),
-                          TableRow([class_2['label'], format_int(me)]),
-                          TableRow([class_3['label'], format_int(hi)])]
-
-        table_body.append(TableRow(tr('Notes'), header=True))
-        table_body.append(tr('High hazard is defined as shake levels greater '
-                             'than %i on the MMI scale.') % t2)
-        table_body.append(tr('Medium hazard is defined as shake levels '
-                             'between %i and %i on the MMI scale.') % (t1, t2))
-        table_body.append(tr('Low hazard is defined as shake levels '
-                             'between %i and %i on the MMI scale.') % (t0, t1))
+            attribute_names = [tr('Buildings Affected')]
+        breakdown = ImpactBreakdown(
+            categories, attribute_names, 'building_breakdown')
+        breakdown[tr('Unaffected'), tr('Buildings Affected')] = unaffected
+        breakdown[class_1['label'], tr('Buildings Affected')] = lo
+        breakdown[class_2['label'], tr('Buildings Affected')] = me
+        breakdown[class_3['label'], tr('Buildings Affected')] = hi
         if is_nexis:
-            table_body.append(tr('Values are in units of 1 million Australian '
-                                 'Dollars'))
+            for c in categories:
+                breakdown[c, tr('Buildings value ($M)')] = building_values[
+                    categories.index(c)]
+                breakdown[c, tr('Contents value ($M)')] = contents_values[
+                    categories.index(c)]
 
-        impact_keywords.primary_layer.set_buildings_breakdown(
-            buildings, affected_buildings)
-        impact_keywords.primary_layer.set_impact_assesment_buildings(
-            'buildings', 'earthquake', buildings, affected_buildings)
+        impact_keywords.set_impact_breakdown(breakdown)
+        table_formatter = TableSelector(impact_keywords)
+        # if is_nexis:
+        #     # Generate simple impact report for NEXIS type buildings
+        #     table_formatter = NexisBuildingTable(impact_keywords)
+        #
+        # else:
+        #     # Generate simple impact report for unspecific buildings
+        #     table_formatter = BuildingTable(impact_keywords)
 
-        # Create the table here. The keywords object will be passed on,
-        # but let us make the loop small for now...
-        tf = TableFormatter(impact_keywords)
-        impact_summary = tf().toNewlineFreeString()
-        impact_table = impact_summary
-
-        impact_summary = Table(table_body).toNewlineFreeString()
+        impact_summary = table_formatter().toNewlineFreeString()
         impact_table = impact_summary
 
         # Create style

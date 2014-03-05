@@ -41,7 +41,7 @@ class FloodEvacuationFunction(FunctionProvider):
     """
 
     title = tr('Need evacuation')
-    function_id = 'FP1'  # Flood Population 1
+    function_id = 'FloodEvacuationFunction'
     defaults = get_defaults()
 
     # Function documentation
@@ -236,13 +236,14 @@ class FloodEvacuationFunction(FunctionProvider):
                    name=tr('Population which %s') % (
                        get_function_title(self).lower()),
                    # This will take the keywords object next
-                   keywords={'impact_summary': impact_summary,
-                             'impact_table': impact_table,
-                             'map_title': map_title,
-                             'legend_notes': legend_notes,
-                             'legend_units': legend_units,
-                             'legend_title': legend_title,
-                             'evacuated': evacuated,
-                             'total_needs' : tot_needs},
+                   # keywords={'impact_summary': impact_summary,
+                   #           'impact_table': impact_table,
+                   #           'map_title': map_title,
+                   #           'legend_notes': legend_notes,
+                   #           'legend_units': legend_units,
+                   #           'legend_title': legend_title,
+                   #           'evacuated': evacuated,
+                   #           'total_needs': tot_needs},
+                   keywords={'json': impact_keywords, 'html': impact_table},
                    style_info=style_info)
         return R
