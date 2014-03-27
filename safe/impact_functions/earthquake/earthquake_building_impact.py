@@ -194,13 +194,6 @@ class EarthquakeBuildingImpactFunction(FunctionProvider):
 
         impact_keywords.set_impact_breakdown(breakdown)
         table_formatter = TableSelector(impact_keywords)
-        # if is_nexis:
-        #     # Generate simple impact report for NEXIS type buildings
-        #     table_formatter = NexisBuildingTable(impact_keywords)
-        #
-        # else:
-        #     # Generate simple impact report for unspecific buildings
-        #     table_formatter = BuildingTable(impact_keywords)
 
         impact_summary = table_formatter().toNewlineFreeString()
         impact_table = impact_summary

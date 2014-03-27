@@ -184,6 +184,11 @@ class KeywordsLayerImpact(KeywordsLayer):
             self.impact_assessment["hazard_units"] = "wet/dry"
 
     def set_minimum_needs(self, minimum_needs):
+        """Expecting a detailed minimim needs report
+
+        :param minimum_needs: The minimum needs break down.
+        :type minimum_needs: dict
+        """
         self.minimum_needs = minimum_needs
 
     def set_function_details(self, impact_function):

@@ -96,6 +96,9 @@ def evacuated_population_weekly_needs(
         Defaults to perka 7 as described in assumptions below.
     :type minimum_needs: dict
 
+    :param detailed: Flag to indicate the detailed report should be given
+    :type detailed: bool
+
     :returns: The weekly needs for the evacuated population.
     :rtype: dict
 

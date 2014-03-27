@@ -38,6 +38,27 @@ class TableFormatter(object):
         elif table_type == 'Complete Analysis Result':
             return self.analysis_table_complete()
 
+    def _table_body(self):
+        """Get the tabulated form of the impact breakdown
+
+        :return: Impact breakdown table.
+        :rtype: list
+        """
+        def _format(item):
+            if type(item) == int:
+                return format_int(item)
+            return item
+
+        breakdown = self.keywords.primary_layer.impact_breakdown
+        heading = [breakdown.category_label or ''] + breakdown.get_attributes()
+        table = [TableRow(heading, header=True)]
+        for category in breakdown.get_categories():
+            row = [category]
+            for attribute in breakdown.get_attributes():
+                row.append(_format(breakdown[category, attribute]))
+            table.append(row)
+        return table
+
     @staticmethod
     def _get_reduced_totals(buildings_affected, min_group_count=25):
         buildings_reduced = {}
@@ -59,200 +80,10 @@ class TableFormatter(object):
 
         return buildings_reduced
 
-    # def analysis_table(self):
-    #     """Build a table describing the analysis results. (Match current
-    #     impact_table table.)
-    #
-    #     :return: The analysis table
-    #     :rtype: Table
-    #     """
-    #     keywords = self.keywords
-    #     primary_layer = keywords.primary_layer
-    #     function_id = primary_layer.function_details['impact_function_id']
-    #     version = keywords.version
-    #     question = get_question(
-    #         keywords.provenance['impact_layer']['name'],
-    #         keywords.provenance['exposure_layer']['name'],
-    #         primary_layer.function_details['title'])
-    #     table_body = [question]
-    #     if function_id == 'FB1' and version == 1:
-    #         header = [tr('Building type'), tr('Number flooded'), tr('Total')]
-    #         TableRow(header, header=True)
-    #         buildings_affected_original = primary_layer.buildings_breakdown
-    #         total = primary_layer.impact_assessment['total_buildings']
-    #         total_affected = primary_layer.impact_assessment[
-    #             'affected_buildings']
-    #         buildings_affected = self._get_reduced_totals(
-    #             buildings_affected_original)
-    #         table_body.append(TableRow([tr('All'), total_affected, total]))
-    #         table_body.append(TableRow(
-    #             tr('Breakdown by building type'), header=True))
-    #         building_types = buildings_affected.keys()
-    #         building_types.sort()
-    #         for building_type in building_types:
-    #             if building_type == 'other':
-    #                 continue
-    #             table_body.append(TableRow([
-    #                 building_type,
-    #                 buildings_affected[building_type]['affected'],
-    #                 buildings_affected[building_type]['total']]))
-    #         if 'other' in building_types:
-    #             table_body.append(TableRow([
-    #                 'other',
-    #                 buildings_affected['other']['affected'],
-    #                 buildings_affected['other']['total']]))
-    #         table_body.append(TableRow(tr('Action Checklist:'), header=True))
-    #         table_body.append(TableRow(
-    #             tr('Are the critical facilities still open?')))
-    #         table_body.append(TableRow(tr(
-    #             'Which structures have warning capacity (eg. sirens, speakers, '
-    #             'etc.)?')))
-    #         table_body.append(TableRow(
-    #             tr('Which buildings will be evacuation centres?')))
-    #         table_body.append(TableRow(
-    #             tr('Where will we locate the operations centre?')))
-    #         table_body.append(TableRow(tr(
-    #             'Where will we locate warehouse and/or distribution centres?')))
-    #         if buildings_affected_original.get('school', {}).get('affected', 0):
-    #             table_body.append(TableRow(tr(
-    #                 'Where will the students from the %s closed schools go to '
-    #                 'study?') % format_int(
-    #                     buildings_affected['school']['affected'])))
-    #         if buildings_affected_original.get('hospital', {}).get(
-    #                 'affected', 0):
-    #             table_body.append(TableRow(tr(
-    #                 'Where will the patients from the %s closed hospitals go '
-    #                 'for treatment and how will we transport them?') % (
-    #                     format_int(buildings_affected['school']['affected']))))
-    #         table_body.append(TableRow(tr('Notes'), header=True))
-    #         assumption = tr('Buildings are said to be flooded when ')
-    #         if keywords['impact_layer'].provenance['type'] == 'raster':
-    #             threshold = primary_layer.function_details['parameters'][
-    #                 'threshold [m]']
-    #             assumption += tr('flood levels exceed %.1f m') % threshold
-    #         else:
-    #             assumption += tr('in regions marked as affected')
-    #         table_body.append(assumption)
-    #     elif function_id == 'FP1' and version == 1:
-    #         self.fp1_impact_table(table_body, primary_layer)
-    #         total_needs = primary_layer.minimum_needs
-    #         self._add_population_needs_table(table_body, total_needs)
-    #         self._add_action_checklist(table_body, 'population', 'inundation')
-    #         self.fp1_impact_notes(table_body, primary_layer)
-    #     elif function_id == 'FP2' and version == 1:
-    #         self.fp2_impact_table(table_body, primary_layer)
-    #         total_needs = primary_layer.minimum_needs
-    #         self._add_population_needs_table(table_body, total_needs)
-    #
-    #     return Table(table_body)
-    #
-    # def analysis_table_complete(self):
-    #     """Build a table describing the detailed analysis results with action
-    #      list and extended report. (Match current impact impact_summary table.)
-    #
-    #     :return: The analysis table
-    #     :rtype: Table
-    #     """
-    #     keywords = self.keywords
-    #     primary_layer = keywords.primary_layer
-    #     function_id = primary_layer.function_details['impact_function_id']
-    #     version = keywords.version
-    #     question = get_question(
-    #         keywords.provenance['impact_layer']['name'],
-    #         keywords.provenance['exposure_layer']['name'],
-    #         primary_layer.function_details['title'])
-    #     table_body = [question]
-    #     if function_id == 'FP2' and version == 1:
-    #         self.fp2_impact_table(table_body, primary_layer)
-    #         total_needs = primary_layer.minimum_needs
-    #         self._add_population_needs_table(table_body, total_needs)
-    #         self._add_action_checklist(table_body, 'population', 'inundation')
-    #         self.fp2_impact_notes(table_body, primary_layer)
-    #
-    #     return Table(table_body)
-    #
-    # def fp1_impact_table(self, table_body, primary_layer):
-    #     thresholds = primary_layer.function_details['parameters'][
-    #         'thresholds [m]']
-    #     evacuated = primary_layer.impact_assessment[
-    #         'evacuated_population']
-    #     table_body.append(self._format_thousands(
-    #         (tr('People in %.1f m of water') % (thresholds[-1])),
-    #         evacuated, True))
-    #     table_body.append(TableRow(
-    #         tr('* Number is rounded to the nearest 1000')))
-    #     table_body.append(TableRow(tr(
-    #         'Map shows population density needing evacuation')))
-    #
-    # def fp2_impact_table(self, table_body, primary_layer):
-    #     evacuation_percentage = primary_layer.function_details[
-    #         'parameters']['evacuation_percentage']
-    #     evacuated = primary_layer.impact_assessment[
-    #         'evacuated_population']
-    #     affected = primary_layer.impact_assessment[
-    #         'evacuated_population']
-    #     table_body.append(self._format_thousands(
-    #         tr('People affected'), affected, True))
-    #     table_body.append(self._format_thousands(
-    #         tr('People needing evacuation'), evacuated, True))
-    #     table_body.append(TableRow([TableCell(
-    #         tr('* Number is rounded to the nearest 1000'), col_span=2)]))
-    #     table_body.append(TableRow([tr('Evacuation threshold'), '%s%%' % (
-    #         format_int(evacuation_percentage))], header=True))
-    #     table_body.append(TableRow(
-    #         tr('Map shows population affected in each flood prone area')))
-    #
-    # def fp1_impact_notes(self, table_body, primary_layer):
-    #     total_population = primary_layer.impact_assessment[
-    #         'total_population']
-    #     thresholds = primary_layer.function_details['parameters'][
-    #         'thresholds [m]']
-    #     table_body.extend([
-    #         TableRow(tr('Notes'), header=True),
-    #         tr('Total population: %s') % format_int(total_population),
-    #         tr('People need evacuation if flood levels exceed '
-    #            '%(eps).1f m') % {'eps': thresholds[-1]},
-    #         tr('Minimum needs are defined in BNPB regulation 7/2008'),
-    #         tr('All values are rounded up to the nearest integer in order '
-    #             'to avoid representing human lives as fractionals.')])
-    #
-    #     if len(thresholds) > 1:
-    #         table_body.append(TableRow(
-    #             tr('Detailed breakdown'), header=True))
-    #
-    #         for i, val in enumerate(thresholds[:-1]):
-    #             s = (tr(
-    #                 'People in %(lo).1f m to %(hi).1f m of water: '
-    #                 '%(val)i') % {
-    #                     'lo': val,
-    #                     'hi': thresholds[i + 1],
-    #                     'val': primary_layer.impact_assessment[val]})
-    #             table_body.append(TableRow(s))
-    #
-    # def fp2_impact_notes(self, table_body, primary_layer):
-    #     """Impact notes for impact function with id fp2.
-    #
-    #     :param table_body: The table data.
-    #     :type table_body: list
-    #
-    #     :param primary_layer: The keywords primary layers data
-    #     :type primary_layer: KeywordsLayerImpact
-    #     """
-    #     total_population = primary_layer.impact_assessment[
-    #         'total_population']
-    #     table_body.extend([
-    #         TableRow(tr('Notes'), header=True),
-    #         tr('Total population: %s') % format_int(total_population),
-    #         tr('People need evacuation if in area identified as "Flood Prone"'),
-    #         tr('Minimum needs are defined in BNPB regulation 7/2008')])
-
-
     @staticmethod
-    def _add_population_needs_table(table_body, total_needs):
-            table_body.append(TableRow(tr(
-                'Table below shows the weekly minimum needs for all '
-                'evacuated people')))
-            table_body.append(TableRow(
+    def _add_population_needs_table(total_needs):
+            table = []
+            table.append(TableRow(
                 [tr('Needs per week'), tr('Total')], header=True))
             food = total_needs['food']
             drinking_water = total_needs['drinking_water']
@@ -261,14 +92,15 @@ class TableFormatter(object):
             toilet = total_needs['toilet']
             for resource in [
                     food, drinking_water, clean_water]:
-                table_body.append(
-                    [tr('%s [%s]' % (
+                table.append([
+                    tr('%s [%s]' % (
                         resource['type'], resource['unit_abbreviation'])),
-                     format_int(resource['quantity'])])
+                    format_int(resource['quantity'])])
             for resource in [hygine_pack, toilet]:
-                table_body.append([
+                table.append([
                     tr('%s' % resource['type']),
                     format_int(resource['quantity'])])
+            return table
 
     @staticmethod
     def _add_action_checklist(table_body, impact, hazard):
@@ -294,36 +126,6 @@ class TableFormatter(object):
             ('*' if value >= 1000 else ''))], header=header)
 
 
-# class NexisBuildingTable(TableFormatter):
-#     def __call__(self):
-#         return Table([
-#             question,
-#             TableRow([
-#                 tr('Hazard Level'), tr('Buildings Affected'),
-#                 tr('Buildings value ($M)'), tr('Contents value ($M)')],
-#                      header=True),
-#             TableRow([
-#                 class_1['label'], format_int(lo),
-#                 format_int(building_values[1]),
-#                 format_int(contents_values[1])]),
-#             TableRow([
-#                 class_2['label'], format_int(me),
-#                 format_int(building_values[2]),
-#                 format_int(contents_values[2])]),
-#             TableRow([
-#                 class_3['label'], format_int(hi),
-#                 format_int(building_values[3]),
-#                 format_int(contents_values[3])]),
-#             TableRow(tr('Notes'), header=True),
-#             tr('High hazard is defined as shake levels greater '
-#                 'than %i on the MMI scale.') % t2,
-#             tr('Medium hazard is defined as shake levels '
-#                 'between %i and %i on the MMI scale.') % (t1, t2),
-#             tr('Low hazard is defined as shake levels '
-#                 'between %i and %i on the MMI scale.') % (t0, t1),
-#             tr('Values are in units of 1 million Australian Dollars')])
-
-
 class BuildingTable(TableFormatter):
     def analysis_table(self):
 
@@ -334,17 +136,6 @@ class BuildingTable(TableFormatter):
         table += self._table_body()
         table += self._get_action_checklist()
         return Table(table)
-
-    def _table_body(self):
-        breakdown = self.keywords.primary_layer.impact_breakdown
-        heading = [breakdown.category_label or ''] + breakdown.get_attributes()
-        table = [TableRow(heading, header=True)]
-        for category in breakdown.get_categories():
-            row = [category]
-            for attribute in breakdown.get_attributes():
-                row.append(breakdown[category, attribute])
-            table.append(row)
-        return table
 
     def _get_action_checklist(self):
         parameters = self.keywords.function_details['parameters']
@@ -361,6 +152,65 @@ class BuildingTable(TableFormatter):
         return table
 
 
+class PopulationEarthquakeTable(TableFormatter):
+    def analysis_table(self):
+        table = [get_question(
+            self.keywords.provenance['impact_layer']['name'],
+            self.keywords.provenance['exposure_layer']['name'],
+            self.keywords.primary_layer.function_details['title'])]
+        table += self._table_body()
+        table += [tr('Map shows density estimate of displaced population')]
+        minimum_needs = self.keywords.primary_layer.minimum_needs
+        table += self._add_population_needs_table(minimum_needs)
+        table += self._get_action_checklist()
+        table += self._get_notes()
+        return Table(table)
+
+    def _get_action_checklist(self):
+        breakdown = self.keywords.primary_layer.impact_breakdown
+        fatalities = breakdown[tr('Fatalities'), tr('population')]
+        displaced = breakdown[tr('People displaced'), tr('population')]
+
+        table = [TableRow(tr('Action Checklist:'), header=True)]
+        if fatalities:
+            table.append(
+                tr('Are there enough victim identification units available '
+                   'for %s people?') % format_int(fatalities))
+        if displaced:
+            table.append(
+                tr('Are there enough shelters and relief items available for '
+                   '%s people?') % format_int(displaced))
+            table.append(TableRow(
+                tr('If yes, where are they located and how will we distribute '
+                   'them?')))
+            table.append(TableRow(
+                tr('If no, where can we obtain additional relief items from '
+                   'and how will we transport them?')))
+        return table
+
+    def _get_notes(self):
+        breakdown = self.keywords.primary_layer.impact_breakdown
+        total = breakdown[tr('Total population'), tr('population')]
+        return [
+            TableRow(tr('Notes'), header=True),
+            tr('Total population: %s') % format_int(total),
+            tr('People are considered to be displaced if they experience and '
+               'survive a shake level of more than 5 on the MMI scale '),
+            tr('Minimum needs are defined in BNPB regulation 7/2008'),
+            tr('The fatality calculation assumes that no fatalities occur for '
+               'shake levels below 4 and fatality counts of less than 50 are '
+                'disregarded.'),
+            tr('All values are rounded up to the nearest integer in order to '
+               'avoid representing human lives as fractions.'),
+            TableRow(tr('Notes'), header=True),
+            tr('Fatality model is from Institute of Teknologi Bandung 2012.'),
+            tr('Population numbers rounded to nearest 1000.')]
+
+
+
 def TableSelector(keywords):
     if keywords.impact_assessment['exposure_subcategory'] == 'buildings':
         return BuildingTable(keywords)
+    if keywords.impact_assessment['exposure_subcategory'] == 'population':
+        if keywords.impact_assessment['hazard_subcategory'] == 'earthquake':
+            return PopulationEarthquakeTable(keywords)
